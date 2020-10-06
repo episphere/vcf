@@ -5,7 +5,7 @@ vcf = function(url){
     this.url=url||'test_4X_191.vcf'
     this.date=new Date()
     this.loadMeta=_=>vcf.loadMeta(url=this.url)
-    this.fetch=range=>{
+    this.fetch=(range=[0,1000])=>{
         return vcf.fetch(range,url=this.url)
     }
 }
