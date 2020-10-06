@@ -1,0 +1,51 @@
+body {
+    color:navy;
+    font-family:sans-serif;
+    border-style: solid;
+    border-width: 20;
+    border-color:white
+}
+
+p {
+    color:navy;
+}
+
+h1 {
+    color:brown
+}
+
+h2 {
+    color:maroon;
+    font-size:x-large;
+}
+
+h3 {
+    color:#5e0096;
+}
+h4 {
+    color:#00968a;
+    font-size:large;
+}
+code {
+    color:green;
+    font-style:italic;
+}
+
+a:hover {
+    background-color:yellow;
+    color:red
+}
+
+.code {
+    color:maroon;
+    font-size:large;
+    font-family:monospace;
+    vertical-align:top
+}
+.label {
+    color:blue
+}
+
+input {
+    color:blue
+}
