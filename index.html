@@ -3,6 +3,7 @@
     <title>VCF</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap.native/2.0.27/bootstrap-native-v4.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"></script>
     <script src="vcf.js"></script>
     <link rel="stylesheet" href="vcf.css">
 </head>
@@ -26,8 +27,9 @@
         let v = new vcf(vcfURL.value)
         let txt = await (await v.fetch([parseInt(rangeStart.value),parseInt(rangeEnd.value)])).text()
         rangeTextArea.value=txt
-        console.log(txt,v,new Date())
+        //console.log(txt,v,new Date())
     }
+    // https://ftp.ncbi.nlm.nih.gov/pub/clinvar/
 </script>
 </body>
 </html>

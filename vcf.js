@@ -11,7 +11,7 @@ vcf = function(url){
 }
 
 vcf.loadMeta=function(url){ // load metadata
-    console.log(url)
+    //console.log(url)
     //debugger
 }
 
