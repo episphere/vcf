@@ -24,6 +24,15 @@ vcf.fetch=(range,url)=>{
     })
 }
 
+vcf.concat=(a,b)=>{ // concatenate array buffers
+    let c = new Uint8Array(a.length+b.length)
+    c.set(a);
+    c.set(b, a.length);
+    return c
+}
+
+// Study this:
+// https://github.com/GMOD/tabix-js
 
 if(typeof(define)!='undefined'){
     define(vcf)
