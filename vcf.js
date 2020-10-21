@@ -27,11 +27,35 @@ vcf.fetch=(range,url)=>{
 // hello Gus
 
 vcf.concat=(a,b)=>{ // concatenate array buffers
-    let c = new Uint8Array(a.length+b.length)
-    c.set(a);
-    c.set(b, a.length);
+    let c = new Uint8Array(a.byteLength+b.byteLength)
+    c.set(new Uint8Array(a),0);
+    c.set(new Uint8Array(b), a.byteLength);
     return c
 }
+
+vcf.getArrayBuffer=async(range,url)=>{
+    return await (await (fetch(url,{
+        headers: {
+                'content-type': 'multipart/byteranges',
+                'range': `bytes=${range.join('-')}`,
+            }
+    }))).arrayBuffer()
+}
+
+
+vcf.getVCFgz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
+    let ab = await vcf.getArrayBuffer(range,url)
+    // check if seed is needed
+    if(range[0]>0){
+        let seed=await vcf.getArrayBuffer([0,88],url)
+        ab=vcf.concat(seed,ab)
+    }
+    // inflate it (unzip it)
+    let abi=pako.inflate(ab);
+    // convert it to text
+    return [...abi].map(x=>String.fromCharCode(x)).join('')
+}
+
 
 // Study this:
 // https://github.com/GMOD/tabix-js
