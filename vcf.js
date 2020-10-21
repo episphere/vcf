@@ -51,9 +51,8 @@ vcf.getVCFgz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/hu
         ab=vcf.concat(seed,ab)
     }
     // inflate it (unzip it)
-    let abi=pako.inflate(ab);
-    // convert it to text
-    return [...abi].map(x=>String.fromCharCode(x)).join('')
+    return pako.inflate(ab,{"to":"string"});
+    //return [...abi].map(x=>String.fromCharCode(x)).join('')
 }
 
 
