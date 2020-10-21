@@ -43,11 +43,11 @@ vcf.getArrayBuffer=async(range,url)=>{
 }
 
 
-vcf.getVCFgz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
+vcf.getVCFgz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz',seedLength)=>{
     let ab = await vcf.getArrayBuffer(range,url)
     // check if seed is needed
-    if(range[0]>0){
-        let seed=await vcf.getArrayBuffer([0,88],url)
+    if(seedLength){
+        let seed=await vcf.getArrayBuffer([0,seedLength],url)
         ab=vcf.concat(seed,ab)
     }
     // inflate it (unzip it)
