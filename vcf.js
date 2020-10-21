@@ -24,6 +24,8 @@ vcf.fetch=(range,url)=>{
     })
 }
 
+// hello Gus
+
 vcf.concat=(a,b)=>{ // concatenate array buffers
     let c = new Uint8Array(a.length+b.length)
     c.set(a);
