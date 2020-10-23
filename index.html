@@ -29,8 +29,14 @@
             rangeTextArea.style.height='10em'
             rangeTextArea.style.width='100%'
         }
-        let v = new vcf(vcfURL.value)
-        let txt = await (await v.fetch([parseInt(rangeStart.value),parseInt(rangeEnd.value)])).text()
+        let txt='';
+        let url=vcfURL.value;
+        if([url[url.length-3],url[url.length-2],url[url.length-1]].join('')=='.gz'){
+            txt = await vcf.getVCFgz([parseInt(rangeStart.value),parseInt(rangeEnd.value)],url)
+        }else{
+            let v = new vcf(vcfURL.value)
+            txt = await (await v.fetch([parseInt(rangeStart.value),parseInt(rangeEnd.value)])).text()
+        }
         rangeTextArea.value=txt
         //console.log(txt,v,new Date())
     }

@@ -33,7 +33,7 @@ vcf.concat=(a,b)=>{ // concatenate array buffers
     return c
 }
 
-vcf.getArrayBuffer=async(range,url)=>{
+vcf.getArrayBuffer=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
     return await (await (fetch(url,{
         headers: {
                 'content-type': 'multipart/byteranges',
@@ -50,9 +50,9 @@ vcf.getVCFgz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/hu
         let seed=await vcf.getArrayBuffer([0,seedLength],url)
         ab=vcf.concat(seed,ab)
     }
-    // inflate it (unzip it)
+    // inflate it (unzip it) if needed
+    //if([url[url.length-3],url[url.length-2],url[url.length-1]].join('')=='.gz'){
     return pako.inflate(ab,{"to":"string"});
-    //return [...abi].map(x=>String.fromCharCode(x)).join('')
 }
 
 
