@@ -61,6 +61,11 @@ vcf.getTbi=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-A
 // Study this:
 // https://github.com/GMOD/tabix-js
 
+
+if(typeof(define)!='undefined'){
+    define({proto:vcf})
+}
+
 if(typeof(pako)=="undefined"){
     try{
         let s = document.createElement('script')
@@ -72,7 +77,4 @@ if(typeof(pako)=="undefined"){
 }
 
 
-if(typeof(define)!='undefined'){
-    define(vcf)
-}
 
