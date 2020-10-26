@@ -35,7 +35,7 @@
             txt = await vcf.getVCFgz([parseInt(rangeStart.value),parseInt(rangeEnd.value)],url)
         }else{
             let v = new vcf(vcfURL.value)
-            txt = await (await v.fetch([parseInt(rangeStart.value),parseInt(rangeEnd.value)])).text()
+            txt = await v.fetch([parseInt(rangeStart.value),parseInt(rangeEnd.value)])
         }
         rangeTextArea.value=txt
         //console.log(txt,v,new Date())
