@@ -29,18 +29,11 @@
             rangeTextArea.style.height='10em'
             rangeTextArea.style.width='100%'
         }
-        let txt='';
         let url=vcfURL.value;
-        if([url[url.length-3],url[url.length-2],url[url.length-1]].join('')=='.gz'){
-            txt = await vcf.getVCFgz([parseInt(rangeStart.value),parseInt(rangeEnd.value)],url)
-        }else{
-            let v = new vcf(vcfURL.value)
-            txt = await v.fetch([parseInt(rangeStart.value),parseInt(rangeEnd.value)])
-        }
-        rangeTextArea.value=txt
-        //console.log(txt,v,new Date())
+        let range=[parseInt(rangeStart.value),parseInt(rangeEnd.value)]
+        let v = new vcf(vcfURL.value)
+        rangeTextArea.value=await v.fetch([parseInt(rangeStart.value),parseInt(rangeEnd.value)])
     }
-    // https://ftp.ncbi.nlm.nih.gov/pub/clinvar/
 </script>
 </body>
 </html>

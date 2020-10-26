@@ -8,7 +8,7 @@ vcf = function(url){
         let sufix = url.match(/.{3}$/)[0]
         switch(url.match(/.{3}$/)[0]) {
           case '.gz':
-            return vcf.getVCFgz(range,url=this.url)
+            return await vcf.getVCFgz(range,url=this.url)
             break;
           case 'tbi':
             // code block
