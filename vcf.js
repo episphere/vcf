@@ -11,7 +11,7 @@ vcf = function(url){
             return await vcf.getVCFgz(range,url=this.url)
             break;
           case 'tbi':
-            // code block
+            return (await vcf.getTbi(url=this.url)).slice(range[0],range[1])
             break;
           default:
             return await (await vcf.fetch(range,url=this.url)).text()
@@ -54,8 +54,9 @@ vcf.getVCFgz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/hu
 }
 
 vcf.getTbi=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All_papu.vcf.gz.tbi')=>{
-    return await (await fetch(url)).arrayBuffer()
-    }
+    const bf = pako.inflate(await (await fetch(url)).arrayBuffer())
+    return [...bf].map(x=>String.fromCharCode(parseInt(x))).join('')
+}
 
 
 // Study this:
