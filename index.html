@@ -18,7 +18,7 @@
 <h2>URL of VCF file (cors)</h2>
 <p><input id="vcfURL" size=50 value="test_4X_191.vcf"></p>
 </p>
-<h3>Read byte range</h3>
+<h3>Read byte range <span style="font-size:small;color:green">(total: <span id="filesize" style="color:red">...</span>)</span></h3>
 <p>
 <input id="rangeStart" size=10 value=0> - <input id="rangeEnd" size=10 value=1000> <button type="button" class="btn btn-primary" id="readRange" onclick="readRangeFun()">Read</button>
 <br><textarea id="rangeTextArea" style="width:20em;color:lime;background-color:black"> > chose range and click on Read</textarea>
@@ -33,6 +33,7 @@
         let range=[parseInt(rangeStart.value),parseInt(rangeEnd.value)]
         let v = new vcf(vcfURL.value)
         rangeTextArea.value=await v.fetch([parseInt(rangeStart.value),parseInt(rangeEnd.value)])
+        filesize.textContent=await vcf.fileSize(url)/1000000+'M'
     }
 </script>
 </body>

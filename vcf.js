@@ -1,9 +1,10 @@
 console.log('vcf.js loaded')
 
-vcf = function(url){
+vcf = function (url){
     // 'https://raw.githubusercontent.com/compbiocore/VariantVisualization.jl/master/test/test_files/test_4X_191.vcf
     this.url=url||'test_4X_191.vcf'
     this.date=new Date()
+    vcf.fileSize(url).then(sz=>{this.size=sz})
     this.fetch=async(range=[0,1000])=>{
         let sufix = url.match(/.{3}$/)[0]
         switch(url.match(/.{3}$/)[0]) {
@@ -58,6 +59,21 @@ vcf.getTbi=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-A
     return [...bf].map(x=>String.fromCharCode(parseInt(x))).join('')
 }
 
+vcf.index=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
+    // index chunk locations and Chr:pos
+    idx={
+        chunks:[],
+        chrPos:[]
+    }
+    // find size of file
+}
+
+vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
+    let response = await fetch(url);
+    const reader = response.body.getReader();
+    const contentLength = response.headers.get('Content-Length');
+    return contentLength
+}
 
 // Study this:
 // https://github.com/GMOD/tabix-js
