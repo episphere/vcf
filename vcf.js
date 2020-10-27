@@ -5,7 +5,8 @@ vcf = function (url){
     this.url=url||'test_4X_191.vcf'
     this.date=new Date()
     let that=this;
-    this.size=vcf.fileSize(url).then(sz=>{that.size=sz})  // promise
+    this.size=vcf.fileSize(url);  // await v.size will garantee one or the other
+    (async function(){that.size=await that.size})(); // fullfill promise asap
     this.fetch=async(range=[0,1000])=>{
         let sufix = url.match(/.{3}$/)[0]
         switch(url.match(/.{3}$/)[0]) {
