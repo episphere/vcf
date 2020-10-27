@@ -20,6 +20,11 @@ vcf = function (url){
             return await (await vcf.fetch(range,url=this.url)).text()
         }
     }
+    this.indexGz=async(url=this.url)=>{
+        that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
+        return that.indexGz
+    }
+    this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
 }
 
 vcf.fetch=(range,url)=>{
@@ -61,17 +66,42 @@ vcf.getTbi=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-A
     return [...bf].map(x=>String.fromCharCode(parseInt(x))).join('')
 }
 
-vcf.index=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
+vcf.indexGz=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180531_papu.vcf.gz',size)=>{
     // index chunk locations and Chr:pos
-    idx={
+    let idx={
         chunks:[],
         chrPos:[]
     }
     // find size of file
+    idx.size = await size || await vcf.fileSize(url)
+    idx.step=10000000
+    for(let i=0;i<idx.size;i+=idx.step){
+        let iNext = i+idx.step
+        if(iNext>=idx.size){iNext=idx.size-1}
+        let arr = await vcf.getArrayBuffer([i,iNext],url)
+        arr = new DataView(arr)
+        arr = [...Array(arr.byteLength)].map((x,i)=>arr.getUint8(i))
+        let mtx=vcf.matchKey(arr,key=vcf.gzKey)
+        mtx.forEach(x=>{idx.chunks.push(i+x)})
+        console.log(i,mtx)
+        //debugger
+    }
+
+    return idx
+}
+
+vcf.matchKey=(arr,key=vcf.gzKey)=>{
+    let ind=arr.map((x,i)=>i) // the indexes
+    key.forEach((k,j)=>{
+        ind=ind.filter(i=>arr[i+j]==k)
+    })
+    return ind
 }
 
 vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
-    let response = await fetch(url);
+    let response = await fetch(url,{
+        method:'HEAD'
+    });
     const reader = response.body.getReader();
     const contentLength = response.headers.get('Content-Length');
     return parseInt(contentLength)
@@ -94,6 +124,3 @@ if(typeof(pako)=="undefined"){
         console.log('pako not loaded')
     }
 }
-
-
-
