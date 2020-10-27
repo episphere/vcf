@@ -4,7 +4,8 @@ vcf = function (url){
     // 'https://raw.githubusercontent.com/compbiocore/VariantVisualization.jl/master/test/test_files/test_4X_191.vcf
     this.url=url||'test_4X_191.vcf'
     this.date=new Date()
-    vcf.fileSize(url).then(sz=>{this.size=sz})
+    let that=this;
+    this.size=vcf.fileSize(url).then(sz=>{that.size=sz})  // promise
     this.fetch=async(range=[0,1000])=>{
         let sufix = url.match(/.{3}$/)[0]
         switch(url.match(/.{3}$/)[0]) {
@@ -72,7 +73,7 @@ vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00
     let response = await fetch(url);
     const reader = response.body.getReader();
     const contentLength = response.headers.get('Content-Length');
-    return contentLength
+    return parseInt(contentLength)
 }
 
 // Study this:
