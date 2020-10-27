@@ -24,7 +24,7 @@ vcf = function (url){
         that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
         return that.indexGz
     }
-    this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
+    //this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
 }
 
 vcf.fetch=(range,url)=>{
@@ -66,7 +66,7 @@ vcf.getTbi=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-A
     return [...bf].map(x=>String.fromCharCode(parseInt(x))).join('')
 }
 
-vcf.indexGz=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180531_papu.vcf.gz',size)=>{
+vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20201026.vcf.gz',size)=>{
     // index chunk locations and Chr:pos
     let idx={
         chunks:[],
