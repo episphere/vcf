@@ -82,8 +82,20 @@ vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinv
         arr = new DataView(arr)
         arr = [...Array(arr.byteLength)].map((x,i)=>arr.getUint8(i))
         let mtx=vcf.matchKey(arr,key=vcf.gzKey)
-        mtx.forEach(x=>{idx.chunks.push(i+x)})
-        console.log(i,mtx)
+        mtx=mtx.map(x=>i+x)
+        mtx.forEach(x=>{
+            idx.chunks.push(x)
+            let n = 1000
+            if(i+x==0){n=100000}
+            let txt=pako.inflate(arr.slice(x-i,x+n-i),{to:'string'})
+            txts = txt.split(/\n(\w+\t+\w+)/)
+            let chrPos = [null,null]
+            if(txts.length>1){
+                chrPos=txts[1].split(/\t/).map(x=>parseInt(x))
+            }
+            idx.chrPos.push(chrPos)
+        })
+        console.log(`${Date().slice(4,24)} ${Math.round(100*i/idx.size)}% : [ ${mtx.slice(0,3).join(' , ')} ... (${mtx.length})]`)
         //debugger
     }
 
