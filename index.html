@@ -24,6 +24,7 @@
 <br><textarea id="rangeTextArea" style="width:20em;color:lime;background-color:black"> > chose range and click on Read</textarea>
 </p>
 <script>
+    fetch("00-All.vcf.gz.idx.json").then(x=>x.json().then(x=>{idx=x}))
     readRangeFun=async _=>{
         if(rangeTextArea.style.height.length==0){
             rangeTextArea.style.height='10em'
@@ -32,8 +33,15 @@
         let url=vcfURL.value;
         let range=[parseInt(rangeStart.value),parseInt(rangeEnd.value)]
         let v = new vcf(vcfURL.value)
-        rangeTextArea.value=await v.fetch([parseInt(rangeStart.value),parseInt(rangeEnd.value)])
-        filesize.textContent=await vcf.fileSize(url)/1000000+'M'
+        if(vcfURL.value=="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz"){
+            let start=range[0]
+            range[0]=idx.chunks.filter(x=>x<=range[0]).slice(-1)[0]
+            console.log("indexed gz",range)
+            rangeTextArea.value=(await v.fetch(range)).slice(start-range[0])
+        }else{
+            rangeTextArea.value=(await v.fetch(range))
+        }
+        filesize.textContent=await v.size/1000000+'M'
     }
 </script>
 </body>
