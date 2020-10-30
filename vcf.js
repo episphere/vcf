@@ -24,6 +24,10 @@ vcf = function (url){
         that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
         return that.indexGz
     }
+    this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
+        return vcf.getArrayBuffer(range,url)
+    }
+    
     //this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
 }
 
