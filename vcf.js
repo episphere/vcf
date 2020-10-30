@@ -114,6 +114,20 @@ vcf.matchKey=(arr,key=vcf.gzKey)=>{
     return ind
 }
 
+vcf.compressIdx=function(idx,filename='idx.gz'){
+    // string it
+    //let xx = pako.deflate(idx.chunks.concat(idx.chrPos.map(x=>x[0]).concat(idx.chrPos.map(x=>x[1]))))
+    let xx = pako.gzip(idx.chunks.concat(idx.chrPos.map(x=>x[0]).concat(idx.chrPos.map(x=>x[1]))))
+    if(filename){
+        vcf.saveFile(xx,filename)
+    }
+    return xx
+}
+
+vcf.readIdx=async function(filename='idx.gz'){ // read compressed idx index
+    //let xx = (await fetch(filename)).
+}
+
 vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
     let response = await fetch(url,{
         method:'HEAD'
@@ -121,6 +135,18 @@ vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00
     const reader = response.body.getReader();
     const contentLength = response.headers.get('Content-Length');
     return parseInt(contentLength)
+}
+
+vcf.saveFile=function(x,fileName) { // x is the content of the file
+	// var bb = new Blob([x], {type: 'application/octet-binary'});
+	// see also https://github.com/eligrey/FileSaver.js
+	var bb = new Blob([x]);
+   	var url = URL.createObjectURL(bb);
+	var a = document.createElement('a');
+   	a.href=url;
+   	a.download=fileName
+	a.click()
+	return a
 }
 
 // Study this:
