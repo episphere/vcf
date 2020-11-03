@@ -66,8 +66,10 @@ vcf.getVCFgz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/hu
 }
 
 vcf.getTbi=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All_papu.vcf.gz.tbi')=>{
-    const bf = pako.inflate(await (await fetch(url)).arrayBuffer())
-    return [...bf].map(x=>String.fromCharCode(parseInt(x))).join('')
+    const bf = pako.inflate((await (await fetch(url)).arrayBuffer()),{to:'arraybuffer'})
+    const dv = new DataView(bf.buffer)
+    return dv
+    //return [...bf].map(x=>String.fromCharCode(parseInt(x))).join('')
 }
 
 vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20201026.vcf.gz',size)=>{
