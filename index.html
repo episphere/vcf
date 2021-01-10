@@ -16,13 +16,15 @@
 <!--<p><button type="button" class="btn btn-primary">Primary</button></p>-->
 <p>
 <h2>URL of VCF file (cors)</h2>
-<p><input id="vcfURL" size=50 value="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz"></p>
-</p>
-<h3>Read byte range <span style="font-size:small;color:green">(total: <span id="filesize" style="color:red">...</span>)</span></h3>
 <p>
+<input id="vcfURL" size=50 value="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz"></p>
+<h3>Read byte range <span style="font-size:small;color:green">(total: <span id="filesize" style="color:red">...</span>)</span></h3>
 <input id="rangeStart" size=10 value=0> - <input id="rangeEnd" size=10 value=1000> <button type="button" class="btn btn-primary" id="readRange" onclick="readRangeFun()" disabled=true>Read</button>
-<br><textarea id="rangeTextArea" style="width:20em;color:lime;background-color:black"> > chose range and click on Read</textarea>
+<h3>Read Chromosome-position <span style="font-size:small;color:green"></h3>
+Chromossome <input id="chrStart" size=4 value=0> - <input id="posStart" size=10 value=1000> <button type="button" class="btn btn-primary" id="readChrPos" onclick="readChrPosFun()" disabled=true>Read</button>
+<br><textarea id="rangeTextArea" style="width:20em;color:lime;background-color:black"> > chose range or chrmossome-position and click on Read</textarea>
 </p>
+
 <script>
     fetch("00-All.vcf.gz.idx.json").then(x=>x.json().then(x=>{idx=x;readRange.disabled=false}))
     readRangeFun=async _=>{
