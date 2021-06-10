@@ -1,8 +1,9 @@
 console.log('vcf.js loaded')
 
-vcf = function (url){
+vcf = function (url='test_4X_191.vcf'){
     // 'https://raw.githubusercontent.com/compbiocore/VariantVisualization.jl/master/test/test_files/test_4X_191.vcf
-    this.url=url||'test_4X_191.vcf'
+    //this.url=url||
+    this.url=url
     this.date=new Date()
     let that=this;
     this.size=vcf.fileSize(url);  // await v.size will garantee one or the other
@@ -17,7 +18,7 @@ vcf = function (url){
             return (await vcf.getTbi(url=this.url)).slice(range[0],range[1])
             break;
           default:
-            return await (await vcf.fetch(range,url=this.url)).text()
+            return await (await vcf.fetch(range,this.url)).text()
         }
     }
     this.indexGz=async(url=this.url)=>{
@@ -25,7 +26,7 @@ vcf = function (url){
         return that.indexGz
     }
     this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
-        return vcf.getArrayBuffer(range,url)
+    	return vcf.getArrayBuffer(range,url)
     }
     
     //this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
@@ -49,12 +50,13 @@ vcf.concat=(a,b)=>{ // concatenate array buffers
     return c
 }
 
-vcf.getArrayBuffer=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
+//vcf.getArrayBuffer=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
+vcf.getArrayBuffer=async(range=[0,1000],url='test_4X_191.vcf')=>{
     return await (await (fetch(url,{
         headers: {
-                'content-type': 'multipart/byteranges',
-                'range': `bytes=${range.join('-')}`,
-            }
+			'content-type': 'multipart/byteranges',
+			'range': `bytes=${range.join('-')}`,
+		}
     }))).arrayBuffer()
 }
 
