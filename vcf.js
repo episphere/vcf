@@ -1,6 +1,7 @@
 console.log('vcf.js loaded')
 
-vcf = function (url='test_4X_191.vcf'){
+//vcf = function (url='test_4X_191.vcf'){
+vcf = function (url='clinvar_20201226.vcf.gz'){
     // 'https://raw.githubusercontent.com/compbiocore/VariantVisualization.jl/master/test/test_files/test_4X_191.vcf
     //this.url=url||
     this.url=url
@@ -12,7 +13,7 @@ vcf = function (url='test_4X_191.vcf'){
         let sufix = url.match(/.{3}$/)[0]
         switch(url.match(/.{3}$/)[0]) {
           case '.gz':
-            return await vcf.getVCFgz(range,url=this.url)
+            return await vcf.fetchGz(range,url=this.url)
             break;
           case 'tbi':
             return (await vcf.getTbi(url=this.url)).slice(range[0],range[1])
@@ -27,6 +28,10 @@ vcf = function (url='test_4X_191.vcf'){
     }
     this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
     	return vcf.getArrayBuffer(range,url)
+    }
+
+    this.fetchGz = async(range=[0,1000],url=this.url)=>{
+    	return vcf.fetchGz(range,url)
     }
     
     //this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
@@ -61,9 +66,11 @@ vcf.getArrayBuffer=async(range=[0,1000],url='test_4X_191.vcf')=>{
 }
 
 
-vcf.getVCFgz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
+vcf.fetchGz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
     //let ab = await vcf.getArrayBuffer(range,url)
     let ab = await (await vcf.fetch(range,url)).arrayBuffer()
+    // make sure it is inflatable
+    debugger
     return pako.inflate(ab,{"to":"string"});
 }
 
