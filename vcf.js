@@ -68,9 +68,13 @@ vcf.getArrayBuffer=async(range=[0,1000],url='test_4X_191.vcf')=>{
 
 vcf.fetchGz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
     //let ab = await vcf.getArrayBuffer(range,url)
-    let ab = await (await vcf.fetch(range,url)).arrayBuffer()
-    // make sure it is inflatable
+    const ab = await (await vcf.fetch(range,url)).arrayBuffer()
+    // start at next inflatable key
+    const dv = new DataView(ab)
+    const it = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // as integers
+    const id = vcf.matchKey(it)
     debugger
+    //return it
     return pako.inflate(ab,{"to":"string"});
 }
 
