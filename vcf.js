@@ -72,7 +72,7 @@ vcf.fetchGz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/hum
     // start at next inflatable key
     const dv = new DataView(ab)
     const it = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // as integers
-    const id = vcf.matchKey(it)
+    const id = vcf.matchKey(it.slice(0,10000))
     debugger
     //return it
     return pako.inflate(ab,{"to":"string"});
