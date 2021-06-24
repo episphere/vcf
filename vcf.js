@@ -8,7 +8,7 @@ vcf = function (url='clinvar_20201226.vcf.gz'){
     this.date=new Date()
     let that=this;
     this.size=vcf.fileSize(url);  // await v.size will garantee one or the other
-    (async function(){that.size=await that.size})(); // fullfill promise asap
+    //(async function(){that.size=await that.size})(); // fullfill promise asap
     this.fetch=async(range=[0,1000])=>{
         let sufix = url.match(/.{3}$/)[0]
         switch(url.match(/.{3}$/)[0]) {
@@ -22,6 +22,7 @@ vcf = function (url='clinvar_20201226.vcf.gz'){
             return await (await vcf.fetch(range,this.url)).text()
         }
     }
+    
     this.indexGz=async(url=this.url)=>{
         that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
         return that.indexGz
@@ -33,6 +34,13 @@ vcf = function (url='clinvar_20201226.vcf.gz'){
     this.fetchGz = async(range=[0,1000],url=this.url)=>{
     	return vcf.fetchGz(range,url)
     }
+
+    (async function(){ // fullfill these promises asap
+    	that.size=await that.size
+    	that.key=await (await vcf.fetch([0,15],that.url)).arrayBuffer()
+    	const dv = new DataView(that.key)
+        that.key = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // pick key from first 16 integers
+    })(); 
     
     //this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
 }
@@ -73,9 +81,7 @@ vcf.fetchGz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/hum
     const dv = new DataView(ab)
     const it = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // as integers
     const id = vcf.matchKey(it.slice(0,10000))
-    debugger
-    //return it
-    return pako.inflate(ab,{"to":"string"});
+    return pako.inflate(ab.slice(id[0]),{"to":"string"});
 }
 
 vcf.getTbi=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All_papu.vcf.gz.tbi')=>{
