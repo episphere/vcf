@@ -1,7 +1,9 @@
 console.log('vcf.js loaded')
 
 //vcf = function (url='test_4X_191.vcf'){
-vcf = function (url='clinvar_20201226.vcf.gz'){
+vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz',keyGap){
+//vcf = function (url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz'){
+    //vcf = function (url='clinvar_20201226.vcf.gz'){
     // 'https://raw.githubusercontent.com/compbiocore/VariantVisualization.jl/master/test/test_files/test_4X_191.vcf
     //this.url=url||
     this.url=url
@@ -10,6 +12,7 @@ vcf = function (url='clinvar_20201226.vcf.gz'){
     this.size=vcf.fileSize(url);  // await v.size will garantee one or the other
     //(async function(){that.size=await that.size})(); // fullfill promise asap
     this.fetch=async(range=[0,1000])=>{
+    	/*
         let sufix = url.match(/.{3}$/)[0]
         switch(url.match(/.{3}$/)[0]) {
           case '.gz':
@@ -21,6 +24,8 @@ vcf = function (url='clinvar_20201226.vcf.gz'){
           default:
             return await (await vcf.fetch(range,this.url)).text()
         }
+        */
+        return await vcf.fetchGz(range,url=this.url)
     }
     
     this.indexGz=async(url=this.url)=>{
@@ -30,6 +35,7 @@ vcf = function (url='clinvar_20201226.vcf.gz'){
     this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
     	return vcf.getArrayBuffer(range,url)
     }
+    this.keyGap=keyGap||vcf.keyGap
 
     this.fetchGz = async(range=[0,1000],url=this.url)=>{
     	return vcf.fetchGz(range,url)
@@ -55,7 +61,8 @@ vcf.fetch=(range,url)=>{
 }
 
 vcf.gzKey=[31, 139, 8, 4, 0, 0, 0, 0, 0, 255, 6, 0, 66, 67, 2, 0]
-
+// just an example of a key, better retrieve it from the first 16 integers of the array buffer
+vcf.keyGap=10000
 vcf.concat=(a,b)=>{ // concatenate array buffers
     let c = new Uint8Array(a.byteLength+b.byteLength)
     c.set(new Uint8Array(a),0);
@@ -74,13 +81,20 @@ vcf.getArrayBuffer=async(range=[0,1000],url='test_4X_191.vcf')=>{
 }
 
 
-vcf.fetchGz=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
+vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz',keyGap=vcf.keyGap)=>{
     //let ab = await vcf.getArrayBuffer(range,url)
+    // modulate range
+    if(typeof(range)=="number"){
+    	range = [range,range+keyGap]
+    }
+    if((range[1]-range[0])<keyGap){
+    	range = [range[0],range[0]+keyGap]
+    }
     const ab = await (await vcf.fetch(range,url)).arrayBuffer()
     // start at next inflatable key
     const dv = new DataView(ab)
     const it = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // as integers
-    const id = vcf.matchKey(it.slice(0,10000))
+    const id = vcf.matchKey(it.slice(0,keyGap))
     return pako.inflate(ab.slice(id[0]),{"to":"string"});
 }
 
