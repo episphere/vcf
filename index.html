@@ -40,7 +40,8 @@ Chromossome <input id="chrStart" size=4 value=0> - <input id="posStart" size=10 
             let start=range[0]
             range[0]=idx.chunks.filter(x=>x<=range[0]).slice(-1)[0]
             console.log("indexed gz",range)
-            rangeTextArea.value=(await v.fetch(range)).slice(start-range[0])
+            let res = await v.fetch(range)
+            rangeTextArea.value=(res.txt).slice(start-range[0])
         }else{
             rangeTextArea.value=(await v.fetch(range))
         }

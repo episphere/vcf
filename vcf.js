@@ -90,12 +90,22 @@ vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606
     if((range[1]-range[0])<keyGap){
     	range = [range[0],range[0]+keyGap]
     }
-    const ab = await (await vcf.fetch(range,url)).arrayBuffer()
+    // start at the previous inflatable key
+    //let rr = range // floored range
+    //rr[0]=Math.max(0,rr[0]-keyGap/2) // keyGap has to be an even integer
+    //const ab = await (await vcf.fetch(rr,url)).arrayBuffer()
+    
     // start at next inflatable key
+    const ab = await (await vcf.fetch(range,url)).arrayBuffer()
     const dv = new DataView(ab)
     const it = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // as integers
     const id = vcf.matchKey(it.slice(0,keyGap))
-    return pako.inflate(ab.slice(id[0]),{"to":"string"});
+    //console.log(`id = [${id}]\nit.length = ${it.length}`)
+    return {
+    	txt:pako.inflate(ab.slice(id[0]),{"to":"string"}),
+    	idx:id,
+    	range:range,
+    }
 }
 
 vcf.getTbi=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All_papu.vcf.gz.tbi')=>{
