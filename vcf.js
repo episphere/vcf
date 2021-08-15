@@ -103,8 +103,9 @@ vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606
     //console.log(`id = [${id}]\nit.length = ${it.length}`)
     return {
     	txt:pako.inflate(ab.slice(id[0]),{"to":"string"}),
-    	idx:id,
+    	idx:id.map(v=>v+range[0]),
     	range:range,
+    	url:url
     }
 }
 
