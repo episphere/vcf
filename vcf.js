@@ -10,24 +10,6 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
     this.date=new Date()
     let that=this;
     this.size=vcf.fileSize(url);  // await v.size will garantee one or the other
-    //(async function(){that.size=await that.size})(); // fullfill promise asap
-    this.fetch=async(range=[0,1000])=>{
-    	/*
-        let sufix = url.match(/.{3}$/)[0]
-        switch(url.match(/.{3}$/)[0]) {
-          case '.gz':
-            return await vcf.fetchGz(range,url=this.url)
-            break;
-          case 'tbi':
-            return (await vcf.getTbi(url=this.url)).slice(range[0],range[1])
-            break;
-          default:
-            return await (await vcf.fetch(range,this.url)).text()
-        }
-        */
-        return await vcf.fetchGz(range,url=this.url)
-    }
-    
     this.indexGz=async(url=this.url)=>{
         that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
         return that.indexGz
@@ -38,7 +20,10 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
     this.keyGap=keyGap||vcf.keyGap
 
     this.fetchGz = async(range=[0,1000],url=this.url)=>{
-    	return vcf.fetchGz(range,url)
+    	let res = await vcf.fetchGz(range,url)
+    	// record index, unlike vcf.fetchGz
+    	debugger
+    	return res
     }
 
     (async function(){ // fullfill these promises asap
