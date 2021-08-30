@@ -25,7 +25,15 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
             return await (await vcf.fetch(range,this.url)).text()
         }
         */
-        return await vcf.fetchGz(range,url=this.url)
+
+        // check or retrieve header
+        if(!this.meta){
+        	vcf.meta(this)
+        }
+
+
+        let res = await vcf.fetchGz(range,url=this.url)
+        return res
     }
     
     this.indexGz=async(url=this.url)=>{
@@ -68,6 +76,24 @@ vcf.concat=(a,b)=>{ // concatenate array buffers
     c.set(new Uint8Array(a),0);
     c.set(new Uint8Array(b), a.byteLength);
     return c
+}
+
+vcf.meta= async that=>{ // extract metadata
+	let ini = await vcf.fetchGz([0,100000])
+	let arr = ini.txt.split(/\n/g)
+    that.meta=arr.filter(r=>r.match(/^##/))
+    that.cols=arr[that.meta.length].slice(1).split(/\t/) // column names
+    console.log(`Columns: ${that.cols}`)
+    vcf.idxx(that,ini)
+    return that.meta
+}
+
+vcf.idxx=(that,ini)=>{ // index decompressed content
+    that.idxx = that.idxx || []
+    // data only
+    let arr = ini.txt.split(/\n/g)
+    let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
+	//debugger
 }
 
 //vcf.getArrayBuffer=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
