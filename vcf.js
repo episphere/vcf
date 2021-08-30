@@ -10,7 +10,22 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
     this.date=new Date()
     let that=this;
     this.size=vcf.fileSize(url);  // await v.size will garantee one or the other
-    //(async function(){that.size=await that.size})(); // fullfill promise asap
+    this.indexGz=async(url=this.url)=>{
+        that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
+        return that.indexGz
+    }
+    this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
+    	return vcf.getArrayBuffer(range,url)
+    }
+    this.keyGap=keyGap||vcf.keyGap
+
+    this.fetchGz = async(range=[0,1000],url=this.url)=>{
+    	let res = await vcf.fetchGz(range,url)
+    	// record index, unlike vcf.fetchGz
+    	//debugger
+    	return res
+    }
+
     this.fetch=async(range=[0,1000])=>{
     	/*
         let sufix = url.match(/.{3}$/)[0]
@@ -34,19 +49,6 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
 
         let res = await vcf.fetchGz(range,url=this.url)
         return res
-    }
-    
-    this.indexGz=async(url=this.url)=>{
-        that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
-        return that.indexGz
-    }
-    this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
-    	return vcf.getArrayBuffer(range,url)
-    }
-    this.keyGap=keyGap||vcf.keyGap
-
-    this.fetchGz = async(range=[0,1000],url=this.url)=>{
-    	return vcf.fetchGz(range,url)
     }
 
     (async function(){ // fullfill these promises asap
@@ -127,12 +129,21 @@ vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606
     const it = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // as integers
     const id = vcf.matchKey(it.slice(0,keyGap))
     //console.log(`id = [${id}]\nit.length = ${it.length}`)
-    return {
+    let res = {
     	txt:pako.inflate(ab.slice(id[0]),{"to":"string"}),
+    	arrBuff:ab,
     	idx:id.map(v=>v+range[0]),
     	range:range,
     	url:url
     }
+    /*
+    id.push(it.length)
+    id.slice(0,-1).forEach((idi,i)=>{
+    	res.txt[i]=pako.inflate(ab.slice(id[0]),{"to":"string"})
+    })
+    */
+
+    return res
 }
 
 vcf.getTbi=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All_papu.vcf.gz.tbi')=>{
