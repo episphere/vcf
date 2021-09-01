@@ -56,6 +56,7 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
     	that.key=await (await vcf.fetch([0,15],that.url)).arrayBuffer()
     	const dv = new DataView(that.key)
         that.key = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // pick key from first 16 integers
+        vcf.meta(that) // extract metadata
     })(); 
     
     //this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
