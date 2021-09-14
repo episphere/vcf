@@ -64,7 +64,7 @@ vcf.fetch=(range,url)=>{
 
 vcf.gzKey=[31, 139, 8, 4, 0, 0, 0, 0, 0, 255, 6, 0, 66, 67, 2, 0]
 // just an example of a key, better retrieve it from the first 16 integers of the array buffer
-vcf.keyGap=20000
+vcf.keyGap=20000-1
 vcf.concat=(a,b)=>{ // concatenate array buffers
     let c = new Uint8Array(a.byteLength+b.byteLength)
     c.set(new Uint8Array(a),0);
