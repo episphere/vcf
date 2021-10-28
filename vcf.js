@@ -93,6 +93,9 @@ vcf.meta= async that=>{ // extract metadata
 
 vcf.idxx=(that,ini)=>{ // index decompressed content
     that.idxx = that.idxx || []
+    ini.idx.forEach(i=>{
+    	that.idxx.push(i)
+    }) // add new indes of keys
     // data only
     let arr = ini.txt.split(/\n/g)
     let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
@@ -233,6 +236,21 @@ vcf.saveFile=function(x,fileName) { // x is the content of the file
 	return a
 }
 
+vcf.loadScript= async function(url){
+	console.log(`${url} loaded`)
+    async function asyncScript(url){
+        let load = new Promise((resolve,regect)=>{
+            let s = document.createElement('script')
+            s.src=url
+            s.onload=resolve
+            document.head.appendChild(s)
+        })
+        await load
+    }
+    // satisfy dependencies
+    await asyncScript(url)
+} 
+
 // Study this:
 // https://github.com/GMOD/tabix-js
 
@@ -242,11 +260,5 @@ if(typeof(define)!='undefined'){
 }
 
 if(typeof(pako)=="undefined"){
-    try{
-        let s = document.createElement('script')
-        s.src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"
-        document.head.appendChild(s)
-    }catch(err){
-        console.log('pako not loaded')
-    }
+	vcf.loadScript('https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js')
 }
