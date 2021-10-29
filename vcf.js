@@ -102,7 +102,7 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
     // data only
     let arr = ini.txt.split(/\n/g)
     let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
-	//debugger
+	debugger
 }
 
 //vcf.getArrayBuffer=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
