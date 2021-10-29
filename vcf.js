@@ -22,6 +22,7 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
     this.fetchGz = async(range=[0,1000],url=this.url)=>{
     	let res = await vcf.fetchGz(range,url)
     	// record index, unlike vcf.fetchGz
+    	vcf.idxx(this,res)
     	//debugger
     	return res
     }
@@ -94,7 +95,9 @@ vcf.meta= async that=>{ // extract metadata
 vcf.idxx=(that,ini)=>{ // index decompressed content
     that.idxx = that.idxx || []
     ini.idx.forEach(i=>{
-    	that.idxx.push(i)
+    	if(!that.idxx.includes(i)){ // skip repeats
+    		that.idxx.push(i)
+    	}
     }) // add new indes of keys
     // data only
     let arr = ini.txt.split(/\n/g)
