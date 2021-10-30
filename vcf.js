@@ -93,16 +93,22 @@ vcf.meta= async that=>{ // extract metadata
 }
 
 vcf.idxx=(that,ini)=>{ // index decompressed content
-    that.idxx = that.idxx || []
+    that.idxx = that.idxx || {ki:[],chr:[],pos:[]} // indexing (ki) chromossome (chr) and position (pos) in the first full row after decompression key
     ini.idx.forEach(i=>{
-    	if(!that.idxx.includes(i)){ // skip repeats
-    		that.idxx.push(i)
+    	let j=1 // first full position
+    	let arr = ini.txt.split(/\n/g)
+        let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
+    	if(dt[0].length==dt[1].length){j=0} // the first row is complete
+    	if(!that.idxx.ki.includes(i)){ // skip repeats
+    	    that.idxx.ki.push(i)
+    		that.idxx.chr.push(parseInt(dt[j][0]))
+    		that.idxx.pos.push(parseInt(dt[j][1]))
     	}
     }) // add new indes of keys
     // data only
-    let arr = ini.txt.split(/\n/g)
-    let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
-	debugger
+    //let arr = ini.txt.split(/\n/g)
+    //let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
+	//debugger
 }
 
 //vcf.getArrayBuffer=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
