@@ -88,27 +88,45 @@ vcf.meta= async that=>{ // extract metadata
     that.meta=arr.filter(r=>r.match(/^##/))
     that.cols=arr[that.meta.length].slice(1).split(/\t/) // column names
     console.log(`Columns: ${that.cols}`)
+    let vals = arr[that.meta.length+1].split(/\t/g)
+    that.idxx = that.idxx || [{ki:0,chr:parseInt(vals[0]),pos:parseInt(vals[1])}]
     vcf.idxx(that,ini)
     return that.meta
 }
 
 vcf.idxx=(that,ini)=>{ // index decompressed content
-    that.idxx = that.idxx || {ki:[],chr:[],pos:[]} // indexing (ki) chromossome (chr) and position (pos) in the first full row after decompression key
-    ini.idx.forEach(i=>{
+    that.idxx = that.idxx || [{ki:0,chr:0,pos:0}] //{ki:[],chr:[],pos:[]} // indexing (ki) chromossome (chr) and position (pos) in the first full row after decompression key
+    let n=ini.arrBuff.byteLength // length of array buffer slice
+    let maxLine=2000 // maximum length of VCF row
+    ini.idx.forEach((i,k)=>{
+    //let i = ini.idx[0] // do only the first key match per set
     	let j=1 // first full position
-    	let arr = ini.txt.split(/\n/g)
-        let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
-    	if(dt[0].length==dt[1].length){j=0} // the first row is complete
-    	if(!that.idxx.ki.includes(i)){ // skip repeats
-    	    that.idxx.ki.push(i)
-    		that.idxx.chr.push(parseInt(dt[j][0]))
-    		that.idxx.pos.push(parseInt(dt[j][1]))
+    	let arr=[] // array of stringified rows after kth key match
+    	if(k==0){
+    		arr = ini.txt.split(/\n/g)
+    	} else if((n-i)>maxLine){
+    		let text_i=pako.inflate(ini.arrBuff.slice(i,i+maxLine),{"to":"string"})
+    		arr = text_i.split(/\n/g)
     	}
+    	let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
+    	if(dt.length>0){
+    		if(dt[0].length==dt[1].length){j=0} // the first row is complete
+			if(!that.idxx.map(x=>x.ki).includes(i)){ // skip repeats
+				that.idxx.push({ki:i,chr:parseInt(dt[j][0]),pos:parseInt(dt[j][1])})
+			}
+    	}else{
+    		console.log(`empty array at i=${i} with ini=`,ini)
+    	}	
+    	that.idxx=vcf.sortIdxx(that.idxx)
     }) // add new indes of keys
     // data only
     //let arr = ini.txt.split(/\n/g)
     //let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
 	//debugger
+}
+
+vcf.sortIdxx=(idxx)=>{
+	return idxx.sort((a,b)=>(a.ki-b.ki))
 }
 
 //vcf.getArrayBuffer=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
@@ -210,7 +228,7 @@ vcf.matchKey=(arr,key=vcf.gzKey)=>{
     return ind
 }
 
-vcf.compressIdx=function(idx,filename='idx.gz'){
+vcf.compressIdx=function(idx,filename){
     // string it
     //let xx = pako.deflate(idx.chunks.concat(idx.chrPos.map(x=>x[0]).concat(idx.chrPos.map(x=>x[1]))))
     let xx = pako.gzip(idx.chunks.concat(idx.chrPos.map(x=>x[0]).concat(idx.chrPos.map(x=>x[1]))))

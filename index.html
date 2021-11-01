@@ -27,7 +27,7 @@ Chromossome <input id="chrStart" size=4 value=0> - <input id="posStart" size=10 
 </p>
 
 <script>
-    fetch("00-All.vcf.gz.idx.json").then(x=>x.json().then(x=>{idx=x;readRange.disabled=false}))
+    //fetch("00-All.vcf.gz.idx.json").then(x=>x.json().then(x=>{idx=x;readRange.disabled=false}))
     readRangeFun=async _=>{
         if(rangeTextArea.style.height.length==0){
             rangeTextArea.style.height='10em'
