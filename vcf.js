@@ -95,6 +95,21 @@ vcf.meta= async that=>{ // extract metadata
 }
 
 vcf.idxx=(that,ini)=>{ // index decompressed content
+    console.log('indexed ini:',ini)
+    // extract data rows
+    let dt = ini.txt.split(/\n/g).filter(x=>!x.match(/^#/)).map(r=>r.split(/\t/g))
+    // find first full row
+    let row1 = dt[0]
+    if(row1.length!=dt[1].length){ // if first and second rows have different numbers of columns
+        row1=dt[1]
+    }
+    // find last full row
+    debugger
+}
+
+/*
+vcf.idxx=(that,ini)=>{ // index decompressed content
+    console.log('indexed ini:',ini)
     that.idxx = that.idxx || [{ki:0,chr:0,pos:0}] //{ki:[],chr:[],pos:[]} // indexing (ki) chromossome (chr) and position (pos) in the first full row after decompression key
     let n=ini.arrBuff.byteLength // length of array buffer slice
     let maxLine=2000 // maximum length of VCF row
@@ -124,6 +139,7 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
     //let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
 	//debugger
 }
+*/
 
 vcf.sortIdxx=(idxx)=>{
 	return idxx.sort((a,b)=>(a.ki-b.ki))
