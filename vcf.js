@@ -89,7 +89,7 @@ vcf.meta= async that=>{ // extract metadata
     that.cols=arr[that.meta.length].slice(1).split(/\t/) // column names
     console.log(`Columns: ${that.cols}`)
     let vals = arr[that.meta.length+1].split(/\t/g)
-    that.idxx = that.idxx || [{ki:0,chr:parseInt(vals[0]),pos:parseInt(vals[1])}]
+    //that.idxx = that.idxx || [{ki:0,chr:parseInt(vals[0]),pos:parseInt(vals[1])}]
     vcf.idxx(that,ini)
     return that.meta
 }
@@ -98,13 +98,24 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
     console.log('indexed ini:',ini)
     // extract data rows
     let dt = ini.txt.split(/\n/g).filter(x=>!x.match(/^#/)).map(r=>r.split(/\t/g))
+    console.log('dt:',dt)
     // find first full row
-    let row1 = dt[0]
-    if(row1.length!=dt[1].length){ // if first and second rows have different numbers of columns
-        row1=dt[1]
+    let firstRow = dt[0]
+    if(firstRow.length!=dt[1].length){ // if first and second rows have different numbers of columns
+        firstRow=dt[1]
     }
     // find last full row
-    debugger
+    let lastRow=dt.slice(-2,-1)[0]
+    that.idxx = that.idxx || []
+    that.idxx.push({
+    	i:ini.idx[0],
+    	chr1:parseInt(firstRow[0]),
+    	chr2:parseInt(lastRow[0]),
+    	pos1:parseInt(firstRow[1]),
+    	pos2:parseInt(lastRow[1]),
+    	dt:dt
+    })
+    //debugger
 }
 
 /*
