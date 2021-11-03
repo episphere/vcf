@@ -94,6 +94,16 @@ vcf.meta= async that=>{ // extract metadata
     return that.meta
 }
 
+vcf.tail=async that=>{ // to be run after vcf.meta, to find tail indexes to extablish span
+	if(!that.meta||!that.idxx){
+		await vcf.meta(that)
+	}
+	let ini = await vcf.fetchGz(that.size-that.keyGap)
+	that.idxx(that,ini)
+	debugger
+}
+
+
 vcf.idxx=(that,ini)=>{ // index decompressed content
     console.log('indexed ini:',ini)
     // extract data rows
@@ -109,10 +119,10 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
     that.idxx = that.idxx || []
     that.idxx.push({
     	i:ini.idx[0],
-    	chr1:parseInt(firstRow[0]),
-    	chr2:parseInt(lastRow[0]),
+    	chrStart:parseInt(firstRow[0]),
+    	chrEnd:parseInt(lastRow[0]),
     	pos1:parseInt(firstRow[1]),
-    	pos2:parseInt(lastRow[1]),
+    	posEnd:parseInt(lastRow[1]),
     	dt:dt
     })
     //debugger
