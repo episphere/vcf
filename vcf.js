@@ -99,7 +99,7 @@ vcf.tail=async that=>{ // to be run after vcf.meta, to find tail indexes to exta
 		await vcf.meta(that)
 	}
 	let ini = await vcf.fetchGz(that.size-that.keyGap)
-	that.idxx(that,ini)
+	vcf.idxx(that,ini)
 	debugger
 }
 
