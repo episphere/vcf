@@ -58,6 +58,7 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
     	const dv = new DataView(that.key)
         that.key = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // pick key from first 16 integers
         vcf.meta(that) // extract metadata
+        vcf.tail(that)
     })(); 
     
     //this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
@@ -100,9 +101,8 @@ vcf.tail=async that=>{ // to be run after vcf.meta, to find tail indexes to exta
 	}
 	let ini = await vcf.fetchGz(that.size-that.keyGap)
 	vcf.idxx(that,ini)
-	debugger
+	//debugger
 }
-
 
 vcf.idxx=(that,ini)=>{ // index decompressed content
     console.log('indexed ini:',ini)
@@ -117,15 +117,31 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
     // find last full row
     let lastRow=dt.slice(-2,-1)[0]
     that.idxx = that.idxx || []
-    that.idxx.push({
-    	i:ini.idx[0],
-    	chrStart:parseInt(firstRow[0]),
-    	chrEnd:parseInt(lastRow[0]),
-    	pos1:parseInt(firstRow[1]),
-    	posEnd:parseInt(lastRow[1]),
-    	dt:dt
-    })
+    that.ii00 = that.ii00 || []
+    //if(that.idxx.length>0){
+	//let ii00 = that.idxx.map(x=>x.ii[0]) // maybe we should keep this
+	if(!that.ii00.includes(ini.idx[0])){ // if this is new
+	    that.ii00.push(ini.idx[0]) // update index of start indexes
+		that.idxx.push({
+			ii:ini.idx,
+			chrStart:vcf.parseInt(firstRow[0]),
+			chrEnd:vcf.parseInt(lastRow[0]),
+			posStart:parseInt(firstRow[1]),
+			posEnd:parseInt(lastRow[1]),
+			dt:dt
+		})
+	}
+    //}
+			
     //debugger
+}
+
+vcf.parseInt=x=>{
+	if(x.match(/^\d+$/)){
+		return parseInt(x)
+	}else{
+		return x
+	}
 }
 
 /*
