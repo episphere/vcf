@@ -1,7 +1,7 @@
 console.log('vcf.js loaded')
 
 //vcf = function (url='test_4X_191.vcf'){
-vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz',keyGap){
+vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz',keyGap,chrCode){
 //vcf = function (url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz'){
     //vcf = function (url='clinvar_20201226.vcf.gz'){
     // 'https://raw.githubusercontent.com/compbiocore/VariantVisualization.jl/master/test/test_files/test_4X_191.vcf
@@ -18,6 +18,7 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
     	return vcf.getArrayBuffer(range,url)
     }
     this.keyGap=keyGap||vcf.keyGap
+    this.chrCode=chrCode||vcf.chrCode
 
     this.fetchGz = async(range=[0,1000],url=this.url)=>{
     	let res = await vcf.fetchGz(range,url)
@@ -76,6 +77,7 @@ vcf.fetch=(range,url)=>{
 vcf.gzKey=[31, 139, 8, 4, 0, 0, 0, 0, 0, 255, 6, 0, 66, 67, 2, 0]
 // just an example of a key, better retrieve it from the first 16 integers of the array buffer
 vcf.keyGap=20000-1
+vcf.chrCode='1-22,X,Y,XY,MT,0'
 vcf.concat=(a,b)=>{ // concatenate array buffers
     let c = new Uint8Array(a.byteLength+b.byteLength)
     c.set(new Uint8Array(a),0);
@@ -144,6 +146,10 @@ vcf.parseInt=x=>{
 	}else{
 		return x
 	}
+}
+
+vcf.find= async function(that){
+	debugger
 }
 
 /*
