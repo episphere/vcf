@@ -14,6 +14,8 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
         return that.indexGz
     }
+    this.query=async q=>vcf.query(q,that)
+    this.getChrCode = async ()=>vcf.getChrCode(that)
     this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
     	return vcf.getArrayBuffer(range,url)
     }
@@ -51,7 +53,9 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
 
         let res = await vcf.fetchGz(range,url=this.url)
         return res
-    }
+    };
+
+    //this.query=async q=>await vcf.query(q,that)
 
     (async function(){ // fullfill these promises asap
     	that.size=await that.size
@@ -148,7 +152,15 @@ vcf.parseInt=x=>{
 	}
 }
 
-vcf.find= async function(that){
+vcf.query= async function(q,that){
+	// read chrCode into array
+	if(typeof(that.chrCode)=='string'){
+		that.chrCode=that.chrCode.split(',')
+		debugger
+	}
+}
+
+vcf.getChrCode=async(that)=>{ // extract chrCode
 	debugger
 }
 
