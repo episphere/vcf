@@ -57,8 +57,8 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
     	that.key=await (await vcf.fetch([0,15],that.url)).arrayBuffer()
     	const dv = new DataView(that.key)
         that.key = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // pick key from first 16 integers
-        vcf.meta(that) // extract metadata
-        vcf.tail(that)
+        await vcf.meta(that) // extract metadata
+        await vcf.tail(that)
     })(); 
     
     //this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
@@ -105,10 +105,10 @@ vcf.tail=async that=>{ // to be run after vcf.meta, to find tail indexes to exta
 }
 
 vcf.idxx=(that,ini)=>{ // index decompressed content
-    console.log('indexed ini:',ini)
+    //console.log('indexed ini:',ini)
     // extract data rows
     let dt = ini.txt.split(/\n/g).filter(x=>!x.match(/^#/)).map(r=>r.split(/\t/g))
-    console.log('dt:',dt)
+    //console.log('dt:',dt)
     // find first full row
     let firstRow = dt[0]
     if(firstRow.length!=dt[1].length){ // if first and second rows have different numbers of columns
@@ -129,7 +129,9 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
 			posStart:parseInt(firstRow[1]),
 			posEnd:parseInt(lastRow[1]),
 			dt:dt
-		})
+		}),
+		that.idxx=vcf.sortIdxx(that.idxx)
+		that.ii00=that.ii00.sort()
 	}
     //}
 			
@@ -179,7 +181,7 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
 */
 
 vcf.sortIdxx=(idxx)=>{
-	return idxx.sort((a,b)=>(a.ki-b.ki))
+	return idxx.sort((a,b)=>(a.ii[0]-b.ii[0]))
 }
 
 //vcf.getArrayBuffer=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
