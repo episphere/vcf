@@ -116,6 +116,9 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
     let dt = ini.txt.split(/\n/g).filter(x=>!x.match(/^#/)).map(r=>r.split(/\t/g))
     //console.log('dt:',dt)
     // find first full row
+    if(dt.length<2){
+    	debugger
+    }
     let firstRow = dt[0]
     if(firstRow.length!=dt[1].length){ // if first and second rows have different numbers of columns
         firstRow=dt[1]
@@ -130,8 +133,10 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
 	    that.ii00.push(ini.idx[0]) // update index of start indexes
 		that.idxx.push({
 			ii:ini.idx,
-			chrStart:vcf.parseInt(firstRow[0]),
-			chrEnd:vcf.parseInt(lastRow[0]),
+			//chrStart:vcf.parseInt(firstRow[0]),
+			//chrEnd:vcf.parseInt(lastRow[0]),
+			chrStart:firstRow[0],
+			chrEnd:lastRow[0],
 			posStart:parseInt(firstRow[1]),
 			posEnd:parseInt(lastRow[1]),
 			dt:dt
@@ -161,7 +166,51 @@ vcf.query= async function(q,that){
 }
 
 vcf.getChrCode=async(that)=>{ // extract chrCode
-	debugger
+    that.chrCode = [that.idxx[0].chrStart]
+    stop=false
+    let j=0
+    let iterate = async function(i=parseInt(that.keyGap/2),step=that.keyGap/2){
+    	j=j+1
+    	step=Math.round(step)
+    	if(stop){
+    		debugger
+    	}
+    	ini = await that.fetchGz(i)
+    	let dt = ini.txt.split(/\n/g).filter(x=>!x.match(/^#/)).map(r=>r.split(/\t/g))
+    	let firstRow = dt[0]
+		if(firstRow.length!=dt[1].length){ // if first and second rows have different numbers of columns
+			firstRow=dt[1]
+		}
+		let lastRow=dt.slice(-2,-1)[0]
+		console.log(j,i,step,[firstRow[0],lastRow[0]],that.chrCode)
+		//debugger
+		if(i<that.idxx.slice(-1)[0].ii.slice(-2,-1)[0]){
+			if(lastRow[0]==that.chrCode.slice(-1)[0]){ // if new end chr same as the last one 
+				step=Math.round(step*(1+5*Math.random()))
+				iterate(i+step,step)
+			}else{
+				//debugger
+				if(firstRow[0]==that.chrCode.slice(-1)[0]){ // if read starts with one chr and ends with the other
+					that.chrCode.push(lastRow[0])
+					if(lastRow[0]!=that.idxx.slice(-1)[0].chrEnd||j<1000){ // if it is not the lars chr
+						iterate(i)
+					}else{
+						return that
+					}					
+				}else{
+					//step=Math.round(-0.5*step)
+					//iterate(i-step,Math.round(that.keyGap/(4+Math.random()))) // take a step back and start again
+					iterate(i-step,Math.round(100+that.keyGap*Math.random()))
+				}
+			}
+		}else{
+			//iterate(i-step,Math.round(that.keyGap/(4+Math.random()))) // out of bounds, take a step back
+			iterate(i-step,Math.round(100+that.keyGap*Math.random()))
+		}
+			
+    }
+    iterate()
+	
 }
 
 /*
