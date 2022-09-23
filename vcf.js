@@ -47,7 +47,7 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
 
         // check or retrieve header
         if(!this.meta){
-        	vcf.meta(this)
+        	await vcf.meta(this)
         }
 
 
@@ -70,6 +70,8 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
 }
 
 vcf.fetch=(range,url)=>{
+	range[0]=Math.max(range[0],0) // to stay in range
+    //console.log(range)
     return fetch(url,{
         headers: {
             'content-type': 'multipart/byteranges',
@@ -117,33 +119,36 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
     //console.log('dt:',dt)
     // find first full row
     if(dt.length<2){
-    	debugger
+    	//debugger
     }
-    let firstRow = dt[0]
-    if(firstRow.length!=dt[1].length){ // if first and second rows have different numbers of columns
-        firstRow=dt[1]
+    if(dt.length>1){
+    	let firstRow = dt[0]
+		if(firstRow.length!=dt[1].length){ // if first and second rows have different numbers of columns
+			firstRow=dt[1]
+		}
+		// find last full row
+		let lastRow=dt.slice(-2,-1)[0]
+		that.idxx = that.idxx || []
+		that.ii00 = that.ii00 || []
+		//if(that.idxx.length>0){
+		//let ii00 = that.idxx.map(x=>x.ii[0]) // maybe we should keep this
+		if(!that.ii00.includes(ini.idx[0])){ // if this is new
+			that.ii00.push(ini.idx[0]) // update index of start indexes
+			that.idxx.push({
+				ii:ini.idx,
+				//chrStart:vcf.parseInt(firstRow[0]),
+				//chrEnd:vcf.parseInt(lastRow[0]),
+				chrStart:firstRow[0],
+				chrEnd:lastRow[0],
+				posStart:parseInt(firstRow[1]),
+				posEnd:parseInt(lastRow[1]),
+				dt:dt
+			}),
+			that.idxx=vcf.sortIdxx(that.idxx)
+			that.ii00=that.ii00.sort()
+		}
     }
-    // find last full row
-    let lastRow=dt.slice(-2,-1)[0]
-    that.idxx = that.idxx || []
-    that.ii00 = that.ii00 || []
-    //if(that.idxx.length>0){
-	//let ii00 = that.idxx.map(x=>x.ii[0]) // maybe we should keep this
-	if(!that.ii00.includes(ini.idx[0])){ // if this is new
-	    that.ii00.push(ini.idx[0]) // update index of start indexes
-		that.idxx.push({
-			ii:ini.idx,
-			//chrStart:vcf.parseInt(firstRow[0]),
-			//chrEnd:vcf.parseInt(lastRow[0]),
-			chrStart:firstRow[0],
-			chrEnd:lastRow[0],
-			posStart:parseInt(firstRow[1]),
-			posEnd:parseInt(lastRow[1]),
-			dt:dt
-		}),
-		that.idxx=vcf.sortIdxx(that.idxx)
-		that.ii00=that.ii00.sort()
-	}
+		
     //}
 			
     //debugger
@@ -175,42 +180,46 @@ vcf.getChrCode=async(that)=>{ // extract chrCode
     	if(stop){
     		debugger
     	}
-    	ini = await that.fetchGz(i)
+    	ini = await that.fetchGz(Math.min(i,that.size-1))
     	let dt = ini.txt.split(/\n/g).filter(x=>!x.match(/^#/)).map(r=>r.split(/\t/g))
-    	let firstRow = dt[0]
-		if(firstRow.length!=dt[1].length){ // if first and second rows have different numbers of columns
-			firstRow=dt[1]
-		}
-		let lastRow=dt.slice(-2,-1)[0]
-		console.log(j,i,step,[firstRow[0],lastRow[0]],that.chrCode)
-		//debugger
-		if(i<that.idxx.slice(-1)[0].ii.slice(-2,-1)[0]){
-			if(lastRow[0]==that.chrCode.slice(-1)[0]){ // if new end chr same as the last one 
-				step=Math.round(step*(1+5*Math.random()))
-				iterate(i+step,step)
-			}else{
-				//debugger
-				if(firstRow[0]==that.chrCode.slice(-1)[0]){ // if read starts with one chr and ends with the other
-					that.chrCode.push(lastRow[0])
-					if(lastRow[0]!=that.idxx.slice(-1)[0].chrEnd||j<1000){ // if it is not the lars chr
-						iterate(i)
-					}else{
-						return that
-					}					
-				}else{
-					//step=Math.round(-0.5*step)
-					//iterate(i-step,Math.round(that.keyGap/(4+Math.random()))) // take a step back and start again
-					iterate(i-step,Math.round(100+that.keyGap*Math.random()))
+    	if(dt[0][0].length>0){
+    		let firstRow = dt[0]
+			if(dt[1]){
+				if(firstRow.length!=dt[1].length){ // if first and second rows have different numbers of columns
+					firstRow=dt[1]
 				}
 			}
-		}else{
-			//iterate(i-step,Math.round(that.keyGap/(4+Math.random()))) // out of bounds, take a step back
-			iterate(i-step,Math.round(100+that.keyGap*Math.random()))
-		}
-			
+
+			let lastRow=dt.slice(-2,-1)[0]
+			console.log(j,i,step,[firstRow[0],lastRow[0]],that.chrCode)
+			//debugger
+			if(i<that.idxx.slice(-1)[0].ii.slice(-2,-1)[0]){
+				if(lastRow[0]==that.chrCode.slice(-1)[0]){ // if new end chr same as the last one 
+					step=Math.round(step*(1+5*Math.random()))
+					iterate(i+step,step)
+				}else{
+					//debugger
+					if(firstRow[0]==that.chrCode.slice(-1)[0]){ // if read starts with one chr and ends with the other
+						that.chrCode.push(lastRow[0])
+						if(lastRow[0]!=that.idxx.slice(-1)[0].chrEnd||j<1000){ // if it is not the lars chr
+							iterate(i)
+						}else{
+							return that
+						}					
+					}else{
+						//step=Math.round(-0.5*step)
+						//iterate(i-step,Math.round(that.keyGap/(4+Math.random()))) // take a step back and start again
+						iterate(i-step,Math.round(100+that.keyGap*Math.random()))
+					}
+				}
+			}else{
+				//iterate(i-step,Math.round(that.keyGap/(4+Math.random()))) // out of bounds, take a step back
+				iterate(i-step,Math.round(100+that.keyGap*Math.random()))
+			}
+    	}			
     }
     iterate()
-	
+	return that.chrCode
 }
 
 /*
