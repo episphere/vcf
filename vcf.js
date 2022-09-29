@@ -1,7 +1,7 @@
 console.log('vcf.js loaded')
 
 //vcf = function (url='test_4X_191.vcf'){
-vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz',keyGap,chrCode){
+vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz',keyGap,chrCode=vcf.chrCode){
 //vcf = function (url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz'){
     //vcf = function (url='clinvar_20201226.vcf.gz'){
     // 'https://raw.githubusercontent.com/compbiocore/VariantVisualization.jl/master/test/test_files/test_4X_191.vcf
@@ -15,13 +15,24 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         return that.indexGz
     }
     this.query=async q=>vcf.query(q,that)
-    this.getChrCode = async ()=>vcf.getChrCode(that)
+    //this.getChrCode = async ()=>vcf.getChrCode(that)
     this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
     	return vcf.getArrayBuffer(range,url)
     }
     this.keyGap=keyGap||vcf.keyGap
-    this.chrCode=chrCode||vcf.chrCode
-
+    this.chrCode=chrCode
+	if(typeof(chrCode)=="string"){
+		if(chrCode.match(/\w+-\w+/)){
+			let range = chrCode.match(/\w+-\w+/)[0].split('-').map(x=>parseInt(x))
+			let rangeTxt=`${range[0]}`
+			for (var i = range[0]+1;i<=range[1];i++){
+				rangeTxt+=`,${i}`
+			}
+			this.chrCode=chrCode.replace(/\w+-\w+/,rangeTxt)
+			//debugger
+		}
+		this.chrCode=this.chrCode.split(',')
+	}
     this.fetchGz = async(range=[0,1000],url=this.url)=>{
     	let res = await vcf.fetchGz(range,url)
     	// record index, unlike vcf.fetchGz
@@ -92,7 +103,7 @@ vcf.concat=(a,b)=>{ // concatenate array buffers
 }
 
 vcf.meta= async that=>{ // extract metadata
-	let ini = await vcf.fetchGz([0,100000])
+	let ini = await vcf.fetchGz([0,500000],that.url) // this should probably have the range automated to detect end of header
 	let arr = ini.txt.split(/\n/g)
     that.meta=arr.filter(r=>r.match(/^##/))
     that.cols=arr[that.meta.length].slice(1).split(/\t/) // column names
@@ -420,3 +431,8 @@ if(typeof(define)!='undefined'){
 if(typeof(pako)=="undefined"){
 	vcf.loadScript('https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js')
 }
+
+
+// testing
+v = new vcf('https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz')
+// (await v.fetchGz(10000000)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
