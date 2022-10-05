@@ -435,4 +435,5 @@ if(typeof(pako)=="undefined"){
 
 // testing
 v = new vcf('https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz')
-// (await v.fetchGz(10000000)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
+// (await v.fetchGz(59001026)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
+// (await v.fetchGz(20000000)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
