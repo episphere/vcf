@@ -182,7 +182,7 @@ vcf.query= async function(q,fun=vcf.funDefault,that){
 		q=q.split(',').map(parseFloat)
 	}
 	// start iterative querying
-	
+	console.log('development point')
 	debugger
 }
 
