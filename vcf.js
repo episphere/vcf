@@ -14,7 +14,7 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
         return that.indexGz
     }
-    this.query=async q=>vcf.query(q,that)
+    this.query=async q=>vcf.query(q,fun=vcf.funDefault,that)
     //this.getChrCode = async ()=>vcf.getChrCode(that)
     this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
     	return vcf.getArrayBuffer(range,url)
@@ -173,12 +173,21 @@ vcf.parseInt=x=>{
 	}
 }
 
-vcf.query= async function(q,that){
+vcf.query= async function(q,fun=vcf.funDefault,that){
 	// read chrCode into array
 	if(typeof(that.chrCode)=='string'){
 		that.chrCode=that.chrCode.split(',')
-		debugger
 	}
+	if(typeof(q)=='string'){
+		q=q.split(',').map(parseFloat)
+	}
+	// start iterative querying
+	
+	debugger
+}
+
+vcf.funDefault=function(q1,q2){ // default query sorting function
+	debugger
 }
 
 vcf.getChrCode=async(that)=>{ // extract chrCode
@@ -291,7 +300,8 @@ vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606
     if((range[1]-range[0])<keyGap){
     	range = [range[0],range[0]+keyGap]
     }
-    // start at the previous inflatable key
+    
+	// start at the previous inflatable key
     //let rr = range // floored range
     //rr[0]=Math.max(0,rr[0]-keyGap/2) // keyGap has to be an even integer
     //const ab = await (await vcf.fetch(rr,url)).arrayBuffer()
