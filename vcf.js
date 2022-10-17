@@ -154,7 +154,7 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
 				chrStart:firstRow[0],
 				chrEnd:lastRow[0],
 				posStart:parseInt(firstRow[1]),
-				posEnd:parseInt(lastRow[2]),
+				posEnd:parseInt(lastRow[1]),
 				dt:dt
 			}),
 			that.idxx=vcf.sortIdxx(that.idxx)
@@ -186,23 +186,51 @@ vcf.query= async function(q='1,1234567',fun=vcf.funDefault,that){
 		q[1]=parseFloat(q[1]) // pos converted into number
 	}
 	// start iterative querying
-	console.log('development point')
+	console.log(`range search for (${q})`)
 	// 1 -  find bounds
-	let lowerIdxx=0
+	let val=[]
 	let n = that.idxx.length
 	for(var i = 0;i<n;i++){
-		if (that.chrCode.indexOf(that.idxx[i].chrStart)<=q[0]){ // below chr target
-			if(that.idxx[i].posStart<=q[1]){ // below pos target for that chr
-				console.log(`${i} lower bound: ${that.chrCode[q[0]]},${q[1]} > ${that.idxx[i].chrStart},${that.idxx[i].posStart}`)
-				//debugger
+		let chrStart = that.chrCode.indexOf(that.idxx[i].chrStart) // the index of the chromossome, not the chromossome 
+		let posStart = that.idxx[i].posStart
+		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
+		let posEnd = that.idxx[i].posEnd
+		if (chrStart<=q[0]){ // below or at start chr target
+			if(posStart<=q[1]){ // below or at pos target for that chr
+				console.log(`range #${i} lower bound: ${that.idxx[i].chrStart},${posStart} <= (${that.chrCode[q[0]]},${q[1]})`)
+				// Check upper boundary
+				if (chrEnd<=q[0]){ // below or at end chr target
+					if(posEnd>=q[1]){ // below or at pos target for that chr
+						console.log(`range #${i} upper bound: ${that.idxx[i].chrEnd},${posEnd} => (${that.chrCode[q[0]]},${q[1]})`)
+						console.log('range found! looking for value within range')
+						//that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]).filter(r=>parseInt(r[1])==q[1])
+						let matches=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]).filter(r=>r[1]==q[1])
+						if(matches.length!=0){
+							matches.forEach(mtxi=>val.push(matches))	
+						}
+					}
+				}
 			}
 		}
-		//console.log('i',i)
 	}
-	
-	
-	//debugger
+	return val
 }
+	/*
+	 for(var i = 0;i<n;i++){
+		if (that.chrCode.indexOf(that.idxx[i].chrStart)<=q[0]){ // below or at start chr target
+			if(that.idxx[i].posStart<=q[1]){ // below or at pos target for that chr
+				console.log(`${i} lower bound: ${that.idxx[i].chrStart},${that.idxx[i].posStart} <= (${that.chrCode[q[0]]},${q[1]})`)
+				// Check upper boundary
+				if (that.chrCode.indexOf(that.idxx[i].chrEnd)<=q[0]){ // below or at end chr target
+					if(that.idxx[i].posEnd>=q[1]){ // below or at pos target for that chr
+						console.log(`${i} upper bound: ${that.idxx[i].chrEnd},${that.idxx[i].posEnd} => (${that.chrCode[q[0]]},${q[1]})`)
+					}
+				}
+			}
+		}
+	}
+ */
+
 
 vcf.funDefault=function(q1,q2){ // default query sorting function
 	debugger
