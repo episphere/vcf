@@ -14,7 +14,7 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
         return that.indexGz
     }
-    this.query=async q=>vcf.query(q,fun=vcf.funDefault,that)
+    this.query=async q=>vcf.query(q='1,1234567',fun=vcf.funDefault,that)
     //this.getChrCode = async ()=>vcf.getChrCode(that)
     this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
     	return vcf.getArrayBuffer(range,url)
@@ -152,7 +152,7 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
 				chrStart:firstRow[0],
 				chrEnd:lastRow[0],
 				posStart:parseInt(firstRow[1]),
-				posEnd:parseInt(lastRow[1]),
+				posEnd:parseInt(lastRow[2]),
 				dt:dt
 			}),
 			that.idxx=vcf.sortIdxx(that.idxx)
@@ -173,16 +173,27 @@ vcf.parseInt=x=>{
 	}
 }
 
-vcf.query= async function(q,fun=vcf.funDefault,that){
+vcf.query= async function(q='1,1234567',fun=vcf.funDefault,that){
 	// read chrCode into array
-	if(typeof(that.chrCode)=='string'){
-		that.chrCode=that.chrCode.split(',')
-	}
-	if(typeof(q)=='string'){
-		q=q.split(',').map(parseFloat)
+	//if(typeof(that.chrCode)=='string'){
+	//	that.chrCode=that.chrCode.split(',')
+	//}
+	if(typeof(q)=='string'){ // chr,pos
+		q=q.split(',') // chr kept as string
+		q[0]=that.chrCode.indexOf(q[0]) // chr converted into index if chtCode array
+		q[1]=parseFloat(q[1]) // pos converted into number
 	}
 	// start iterative querying
 	console.log('development point')
+	// 1 -  find bounds
+	let lowerIdxx=0
+	let n = that.idxx.length
+	for(var i = 0;i<n;i++){
+		
+		console.log('i',i)
+	}
+	
+	
 	debugger
 }
 
