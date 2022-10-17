@@ -14,7 +14,9 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
         return that.indexGz
     }
-    this.query=async q=>vcf.query(q='1,1234567',fun=vcf.funDefault,that)
+    this.query=async function(q='1,1234567'){
+		return await vcf.query(q,fun=vcf.funDefault,that)
+	}
     //this.getChrCode = async ()=>vcf.getChrCode(that)
     this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
     	return vcf.getArrayBuffer(range,url)
@@ -189,12 +191,17 @@ vcf.query= async function(q='1,1234567',fun=vcf.funDefault,that){
 	let lowerIdxx=0
 	let n = that.idxx.length
 	for(var i = 0;i<n;i++){
-		
-		console.log('i',i)
+		if (that.chrCode.indexOf(that.idxx[i].chrStart)<=q[0]){ // below chr target
+			if(that.idxx[i].posStart<=q[1]){ // below pos target for that chr
+				console.log(`${i} lower bound: ${that.chrCode[q[0]]},${q[1]} > ${that.idxx[i].chrStart},${that.idxx[i].posStart}`)
+				//debugger
+			}
+		}
+		//console.log('i',i)
 	}
 	
 	
-	debugger
+	//debugger
 }
 
 vcf.funDefault=function(q1,q2){ // default query sorting function
