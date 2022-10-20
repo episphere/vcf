@@ -14,7 +14,7 @@ vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
         return that.indexGz
     }
-    this.query=async function(q='1,1234567'){
+    this.query=async function(q='1,10485'){
 		return await vcf.query(q,fun=vcf.funDefault,that)
 	}
     //this.getChrCode = async ()=>vcf.getChrCode(that)
@@ -175,22 +175,30 @@ vcf.parseInt=x=>{
 	}
 }
 
-vcf.query= async function(q='1,1234567',fun=vcf.funDefault,that){
+vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 	// read chrCode into array
 	//if(typeof(that.chrCode)=='string'){
 	//	that.chrCode=that.chrCode.split(',')
 	//}
 	if(typeof(q)=='string'){ // chr,pos
 		q=q.split(',') // chr kept as string
-		q[0]=that.chrCode.indexOf(q[0]) // chr converted into index if chtCode array
 		q[1]=parseFloat(q[1]) // pos converted into number
 	}
+	q[0]=that.chrCode.indexOf(q[0]) // chr converted into index if chrCode array
+	q=q.map(qi=>qi.toString()) // makign sure the elements of the query array are strings
 	// start iterative querying
 	console.log(`range search for (${q})`)
 	// 1 -  find bounds
+	//let n = that.idxx.length
 	let val=[]
-	let n = that.idxx.length
-	for(var i = 0;i<n;i++){
+	let i=0
+	let j=0
+	while(i<that.idxx.length){
+		//val=[] // reset every try
+		j=j+1
+		if(j>5){
+			break
+		}
 		let chrStart = that.chrCode.indexOf(that.idxx[i].chrStart) // the index of the chromossome, not the chromossome 
 		let posStart = that.idxx[i].posStart
 		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
@@ -208,10 +216,31 @@ vcf.query= async function(q='1,1234567',fun=vcf.funDefault,that){
 						if(matches.length!=0){
 							matches.forEach(mtxi=>val.push(matches))	
 						}
+					}else{
+						console.log('out of range') // find out if a new reading is needed
+						if(i!=(that.idxx.length-1)){ // this is not the end range 
+							let nextChrStart = that.chrCode.indexOf(that.idxx[i+1].chrStart) // the index of the chromossome, not the chromossome 
+							let nextPosStart = that.idxx[i+1].posStart
+							let gap=false
+							if(nextChrStart>parseInt(q[0])){
+								gap=true
+							}else if((nextChrStart==parseInt(q[0]))&(nextPosStart>parseInt(q[1]))){
+								gap=true
+							}
+							if(gap){
+								await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+								//i=i-1
+							}
+							//if(nextChrStart==parseInt(q[0])&(nextPosStart>))
+							debugger
+						}else{
+							console.log(`#${i} - this was the last range`)
+						}
 					}
 				}
 			}
 		}
+		i++
 	}
 	return val
 }
