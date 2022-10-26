@@ -158,7 +158,7 @@ vcf.idxx=(that,ini)=>{ // index decompressed content
 				dt:dt
 			}),
 			that.idxx=vcf.sortIdxx(that.idxx)
-			that.ii00=that.ii00.sort()
+			that.ii00=that.ii00.sort((a,b)=>a>b?1:-1)
 		}
     }
 		
@@ -196,7 +196,8 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 	while(i<that.idxx.length){
 		//val=[] // reset every try
 		j=j+1
-		if(j>5){
+		if(j>100){
+			console.log(`${j} max iterations limit reached`)
 			break
 		}
 		let chrStart = that.chrCode.indexOf(that.idxx[i].chrStart) // the index of the chromossome, not the chromossome 
@@ -228,11 +229,15 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 								gap=true
 							}
 							if(gap){
+								//debugger
+								i = i>0? i-1 : 0
 								await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
-								//i=i-1
+								//debugger
 							}
 							//if(nextChrStart==parseInt(q[0])&(nextPosStart>))
-							debugger
+							//debugger
+							//i = i-1
+							//debugger
 						}else{
 							console.log(`#${i} - this was the last range`)
 						}
@@ -519,6 +524,9 @@ if(typeof(pako)=="undefined"){
 
 
 // testing
-v = new vcf('https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz')
+// v = new vcf('https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz')
+v = new vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')
+// await v.query('7,151040280')
+// await v.query('8,73460721')
 // (await v.fetchGz(59001026)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
 // (await v.fetchGz(20000000)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
