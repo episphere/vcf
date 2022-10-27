@@ -122,7 +122,7 @@ vcf.tail=async that=>{ // to be run after vcf.meta, to find tail indexes to exta
 	}
 	let ini = await vcf.fetchGz(that.size-that.keyGap)
 	vcf.idxx(that,ini)
-	//debugger
+	debugger
 }
 
 vcf.idxx=(that,ini)=>{ // index decompressed content
@@ -183,9 +183,9 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 	if(typeof(q)=='string'){ // chr,pos
 		q=q.split(',') // chr kept as string
 		q[1]=parseFloat(q[1]) // pos converted into number
+		q[0]=that.chrCode.indexOf(q[0]) // chr converted into index if chrCode array
 	}
-	q[0]=that.chrCode.indexOf(q[0]) // chr converted into index if chrCode array
-	q=q.map(qi=>qi.toString()) // makign sure the elements of the query array are strings
+	// q=q.map(qi=>qi.toString()) // makign sure the elements of the query array are strings
 	// start iterative querying
 	console.log(`range search for (${q})`)
 	// 1 -  find bounds
@@ -200,12 +200,34 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 			console.log(`${j} max iterations limit reached`)
 			break
 		}
-		let chrStart = that.chrCode.indexOf(that.idxx[i].chrStart) // the index of the chromossome, not the chromossome 
+		let chrStart = that.chrCode.indexOf(that.idxx[i].chrStart) // the index of the chromossome, not the chromossome name
 		let posStart = that.idxx[i].posStart
 		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
 		let posEnd = that.idxx[i].posEnd
-		if (chrStart<=q[0]){ // below or at start chr target
-			if(posStart<=q[1]){ // below or at pos target for that chr
+		if (chrStart<q[0]){ // undershot chr target
+				//i = i>0? i-1 : 0
+				await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+				//debugger
+		}else{
+			if(chrStart>q[0]){ // overshot
+				i = i>0? i-1 : 0
+				await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+			}else{ // on chr target
+				console.log(`chr match ${v.chrCode[chrStart]}`)
+				if((posStart<q[1])&(posEnd>q[1])){ // range found
+					debugger
+				}else if(posStart<q[1]){ // almost there
+					//i = i>0? i-1 : 0
+					await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+				}else{ // overshot, take a step back
+					i = i>0? i-1 : 0
+					await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+					
+				}
+			}
+				
+			/*
+			if((posStart<q[1])){ // below or at pos target for that chr
 				console.log(`range #${i} lower bound: ${that.idxx[i].chrStart},${posStart} <= (${that.chrCode[q[0]]},${q[1]})`)
 				// Check upper boundary
 				if (chrEnd<=q[0]){ // below or at end chr target
@@ -218,14 +240,14 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 							matches.forEach(mtxi=>val.push(matches))	
 						}
 					}else{
-						console.log('out of range') // find out if a new reading is needed
+						console.log('not found in position ranges') // find out if a new reading is needed
 						if(i!=(that.idxx.length-1)){ // this is not the end range 
 							let nextChrStart = that.chrCode.indexOf(that.idxx[i+1].chrStart) // the index of the chromossome, not the chromossome 
 							let nextPosStart = that.idxx[i+1].posStart
 							let gap=false
 							if(nextChrStart>parseInt(q[0])){
 								gap=true
-							}else if((nextChrStart==parseInt(q[0]))&(nextPosStart>parseInt(q[1]))){
+							}else if((nextChrStart==q[0])&(nextPosStart>q[1])){
 								gap=true
 							}
 							if(gap){
@@ -244,6 +266,8 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 					}
 				}
 			}
+			*/
+			//debugger
 		}
 		i++
 	}
