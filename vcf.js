@@ -122,7 +122,7 @@ vcf.tail=async that=>{ // to be run after vcf.meta, to find tail indexes to exta
 	}
 	let ini = await vcf.fetchGz(that.size-that.keyGap)
 	vcf.idxx(that,ini)
-	debugger
+	//debugger
 }
 
 vcf.idxx=(that,ini)=>{ // index decompressed content
@@ -203,7 +203,8 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 		let chrStart = that.chrCode.indexOf(that.idxx[i].chrStart) // the index of the chromossome, not the chromossome name
 		let posStart = that.idxx[i].posStart
 		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
-		let posEnd = that.idxx[i].posEnd
+		//let posEnd = that.idxx[i].posEnd
+		let posEnd = parseInt(that.idxx[i].dt.filter(r=>r[0]==v.chrCode[chrStart]).slice(-2,-1)[0][1]) // last position for this chromossome
 		if (chrStart<q[0]){ // undershot chr target
 				//i = i>0? i-1 : 0
 				await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
@@ -213,9 +214,16 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 				i = i>0? i-1 : 0
 				await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
 			}else{ // on chr target
-				console.log(`chr match ${v.chrCode[chrStart]}`)
+				console.log(`(${j}) chr match ${v.chrCode[chrStart]}`)
+				//break
+				//use only positions for this chr
+				
 				if((posStart<q[1])&(posEnd>q[1])){ // range found
-					debugger
+					val.push({
+						range:that.idxx[i],
+						hit:that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
+					})
+					break
 				}else if(posStart<q[1]){ // almost there
 					//i = i>0? i-1 : 0
 					await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
@@ -549,8 +557,8 @@ if(typeof(pako)=="undefined"){
 
 // testing
 // v = new vcf('https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz')
-v = new vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')
+// v = new vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')
 // await v.query('7,151040280')
-// await v.query('8,73460721')
+// await v.query('10,133421085')
 // (await v.fetchGz(59001026)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
 // (await v.fetchGz(20000000)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
