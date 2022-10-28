@@ -190,9 +190,21 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 	console.log(`range search for (${q})`)
 	// 1 -  find bounds
 	//let n = that.idxx.length
-	let val=[]
+	let val=[] // matching results will be pushed here
+	let j=0  // counter
+	// Make sure to start i at the range that precedes the query
+	//debugger
 	let i=0
-	let j=0
+	for(i=0;i<that.idxx.length;i++){
+		console.log(`Query seed: ${i}`)
+		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
+		let posEnd=that.idxx[i].posEnd
+		if(chrEnd>q[0]){ // chr range i ends beyond query
+			break
+		} else if(chrEnd==q[0]&posEnd>=q[1]){
+			break
+		}
+	}
 	while(i<that.idxx.length){
 		//val=[] // reset every try
 		j=j+1
@@ -205,6 +217,7 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
 		//let posEnd = that.idxx[i].posEnd
 		let posEnd = parseInt(that.idxx[i].dt.filter(r=>r[0]==v.chrCode[chrStart]).slice(-2,-1)[0][1]) // last position for this chromossome
+		console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
 		if (chrStart<q[0]){ // undershot chr target
 				//i = i>0? i-1 : 0
 				await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
@@ -557,7 +570,7 @@ if(typeof(pako)=="undefined"){
 
 // testing
 // v = new vcf('https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz')
-// v = new vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')
+v = new vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')
 // await v.query('7,151040280')
 // await v.query('10,133421085')
 // (await v.fetchGz(59001026)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
