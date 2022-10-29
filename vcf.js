@@ -190,7 +190,7 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 	console.log(`range search for (${q})`)
 	// 1 -  find bounds
 	//let n = that.idxx.length
-	let val=[] // matching results will be pushed here
+	let val={range:undefined} // matching results will be pushed here
 	let j=0  // counter
 	// Make sure to start i at the range that precedes the query
 	//debugger
@@ -232,10 +232,8 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 				//use only positions for this chr
 				
 				if((posStart<q[1])&(posEnd>q[1])){ // range found
-					val.push({
-						range:that.idxx[i],
-						hit:that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
-					})
+					val.range=that.idxx[i]
+					val.hit=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
 					break
 				}else if(posStart<q[1]){ // almost there
 					//i = i>0? i-1 : 0
