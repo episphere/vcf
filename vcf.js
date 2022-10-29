@@ -196,7 +196,6 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 	//debugger
 	let i=0
 	for(i=0;i<that.idxx.length;i++){
-		console.log(`Query seed: ${i}`)
 		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
 		let posEnd=that.idxx[i].posEnd
 		if(chrEnd>q[0]){ // chr range i ends beyond query
@@ -205,6 +204,7 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 			break
 		}
 	}
+	console.log(`Query seed: ${i}`)
 	while(i<that.idxx.length){
 		//val=[] // reset every try
 		j=j+1
@@ -227,7 +227,7 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 				i = i>0? i-1 : 0
 				await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
 			}else{ // on chr target
-				console.log(`(${j}) chr match ${v.chrCode[chrStart]}`)
+				//console.log(`(${j}) chr match ${v.chrCode[chrStart]}`)
 				//break
 				//use only positions for this chr
 				
