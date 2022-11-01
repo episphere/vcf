@@ -574,6 +574,6 @@ if(typeof(pako)=="undefined"){
 // (await v.fetchGz(59001026)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
 // (await v.fetchGz(20000000)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
 
-if(typeof(define)!='undefined'){
-	define(vcf)
-}
+//if(typeof(define)!='undefined'){
+//	define(vcf)
+//}
