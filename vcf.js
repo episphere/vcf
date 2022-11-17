@@ -571,6 +571,7 @@ if(typeof(pako)=="undefined"){
 // v = new vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')
 // await v.query('7,151040280')
 // await v.query('10,133421085')
+// rs35850753 = await v.query('17,7675353')
 // (await v.fetchGz(59001026)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
 // (await v.fetchGz(20000000)).txt.split(/\n/).slice(1).map(x=>x.split(/\t/))[0]
 
