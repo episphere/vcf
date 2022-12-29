@@ -204,6 +204,9 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 			break
 		}
 	}
+	
+	previousRange='0:0-0:0'
+	
 	console.log(`Query seed: ${i}`)
 	while(i<that.idxx.length){
 		//val=[] // reset every try
@@ -218,75 +221,86 @@ vcf.query= async function(q='1,10485',fun=vcf.funDefault,that){
 		//let posEnd = that.idxx[i].posEnd
 		let posEnd = parseInt(that.idxx[i].dt.filter(r=>r[0]==v.chrCode[chrStart]).slice(-2,-1)[0][1]) // last position for this chromossome
 		console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
-		if (chrStart<q[0]){ // undershot chr target
-				//i = i>0? i-1 : 0
-				await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
-				//debugger
-		}else{
-			if(chrStart>q[0]){ // overshot
-				i = i>0? i-1 : 0
-				await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
-			}else{ // on chr target
-				//console.log(`(${j}) chr match ${v.chrCode[chrStart]}`)
-				//break
-				//use only positions for this chr
-				
-				if((posStart<q[1])&(posEnd>q[1])){ // range found
-					val.range=that.idxx[i]
-					val.hit=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
-					break
-				}else if(posStart<q[1]){ // almost there
-					//i = i>0? i-1 : 0
-					await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
-				}else{ // overshot, take a step back
-					i = i>0? i-1 : 0
-					await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
-					
-				}
-			}
-				
-			/*
-			if((posStart<q[1])){ // below or at pos target for that chr
-				console.log(`range #${i} lower bound: ${that.idxx[i].chrStart},${posStart} <= (${that.chrCode[q[0]]},${q[1]})`)
-				// Check upper boundary
-				if (chrEnd<=q[0]){ // below or at end chr target
-					if(posEnd>=q[1]){ // below or at pos target for that chr
-						console.log(`range #${i} upper bound: ${that.idxx[i].chrEnd},${posEnd} => (${that.chrCode[q[0]]},${q[1]})`)
-						console.log('range found! looking for value within range')
-						//that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]).filter(r=>parseInt(r[1])==q[1])
-						let matches=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]).filter(r=>r[1]==q[1])
-						if(matches.length!=0){
-							matches.forEach(mtxi=>val.push(matches))	
-						}
-					}else{
-						console.log('not found in position ranges') // find out if a new reading is needed
-						if(i!=(that.idxx.length-1)){ // this is not the end range 
-							let nextChrStart = that.chrCode.indexOf(that.idxx[i+1].chrStart) // the index of the chromossome, not the chromossome 
-							let nextPosStart = that.idxx[i+1].posStart
-							let gap=false
-							if(nextChrStart>parseInt(q[0])){
-								gap=true
-							}else if((nextChrStart==q[0])&(nextPosStart>q[1])){
-								gap=true
-							}
-							if(gap){
-								//debugger
-								i = i>0? i-1 : 0
-								await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
-								//debugger
-							}
-							//if(nextChrStart==parseInt(q[0])&(nextPosStart>))
-							//debugger
-							//i = i-1
-							//debugger
-						}else{
-							console.log(`#${i} - this was the last range`)
-						}
-					}
-				}
-			}
-			*/
-			//debugger
+		
+		newRange=`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
+		if(newRange != previousRange){
+		    previousRange = newRange
+		    if (chrStart<q[0]){ // undershot chr target
+				    //i = i>0? i-1 : 0
+				    await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+				    //debugger
+		    }else{
+			    if(chrStart>q[0]){ // overshot
+				    i = i>0? i-1 : 0
+				    await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+			    }else{ // on chr target
+				    //console.log(`(${j}) chr match ${v.chrCode[chrStart]}`)
+				    //break
+				    //use only positions for this chr
+				    
+				    if((posStart<q[1])&(posEnd>q[1])){ // range found
+					    val.range=that.idxx[i]
+					    val.hit=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
+					    break
+				    }else if(posStart<q[1]){ // almost there
+					    //i = i>0? i-1 : 0
+					    await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+				    }
+				    else{ // overshot, take a step back
+					    i = i>0? i-1 : 0
+					    await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+					    
+				    }
+			    }
+				    
+			    /*
+			    if((posStart<q[1])){ // below or at pos target for that chr
+				    console.log(`range #${i} lower bound: ${that.idxx[i].chrStart},${posStart} <= (${that.chrCode[q[0]]},${q[1]})`)
+				    // Check upper boundary
+				    if (chrEnd<=q[0]){ // below or at end chr target
+					    if(posEnd>=q[1]){ // below or at pos target for that chr
+						    console.log(`range #${i} upper bound: ${that.idxx[i].chrEnd},${posEnd} => (${that.chrCode[q[0]]},${q[1]})`)
+						    console.log('range found! looking for value within range')
+						    //that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]).filter(r=>parseInt(r[1])==q[1])
+						    let matches=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]).filter(r=>r[1]==q[1])
+						    if(matches.length!=0){
+							    matches.forEach(mtxi=>val.push(matches))	
+						    }
+					    }else{
+						    console.log('not found in position ranges') // find out if a new reading is needed
+						    if(i!=(that.idxx.length-1)){ // this is not the end range 
+							    let nextChrStart = that.chrCode.indexOf(that.idxx[i+1].chrStart) // the index of the chromossome, not the chromossome 
+							    let nextPosStart = that.idxx[i+1].posStart
+							    let gap=false
+							    if(nextChrStart>parseInt(q[0])){
+								    gap=true
+							    }else if((nextChrStart==q[0])&(nextPosStart>q[1])){
+								    gap=true
+							    }
+							    if(gap){
+								    //debugger
+								    i = i>0? i-1 : 0
+								    await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+								    //debugger
+							    }
+							    //if(nextChrStart==parseInt(q[0])&(nextPosStart>))
+							    //debugger
+							    //i = i-1
+							    //debugger
+						    }else{
+							    console.log(`#${i} - this was the last range`)
+						    }
+					    }
+				    }
+			    }
+			    */
+			    //debugger
+		    }
+		}
+		else{
+		    val.range=that.idxx[i]
+			val.hit=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
+		    break
 		}
 		i++
 	}
