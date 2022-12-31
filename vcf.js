@@ -2,7 +2,7 @@ console.log('vcf.js loaded')
 
 /* Initializes object with default example parameters */
 vcf={}
-vcf.gzKey=[31, 139, 8, 4, 0, 0, 0, 0, 0, 255, 6, 0, 66, 67, 2, 0]
+vcf.gzKey=[31,139,8,4,0,0,0,0,0,255,6,0,66,67,2,0]
 vcf.keyGap=20000-1
 vcf.chrCode='1-22,X,Y,XY,MT,0'
 
@@ -51,11 +51,17 @@ vcf.chrCode='1-22,X,Y,XY,MT,0'
 /** 
 * Initializes main library object.
 *
-* @param {string} url The vcf file url.
-* @param {number} keyGap The gap length between keys.
-* @param {string} chrCode Chromosomes that will be used (Ex.: '2' or '1-22' or '1-22,X,Y,XY,MT' or 'X,Y').
+* @param {string} [url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz] The vcf file url.
+* @param {number} [keyGap=19999] The gap length between keys.
+* @param {string} [chrCode=1-22,X,Y,XY,MT,0] Chromosomes that will be used (Ex.: '2' or '1-22' or '1-22,X,Y,XY,MT' or 'X,Y').
 *
 * @returns {Object} Vcf library object.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await new Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', null, '1-22')
+* let v = await new Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', 19999)
+* let v = await new Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', 19999, '1-5')
 */
 Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', keyGap=vcf.keyGap, chrCode=vcf.chrCode){
     //alternative url https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz'){
@@ -131,6 +137,9 @@ Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
 * @param {string} url The vcf file url.
 *
 * @returns {Object} Request object of partial content (http code 206).
+* 
+* @example
+* var content = await vcf.fetchRange([0,2000], 'https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 */
 vcf.fetchRange=(range,url)=>{
 	range[0]=Math.max(range[0],0) // to stay in range
@@ -150,6 +159,10 @@ vcf.fetchRange=(range,url)=>{
 * @param {Object} that Vcf library object.
 *
 * @returns {array} Lines of metadata of the vcf file.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* var meta = await vcf.getMetadata(v)
 */
 vcf.getMetadata= async that=>{ // extract metadata
 	let ini = await vcf.fetchGz([0,500000],that.url) // this should probably have the range automated to detect end of header
@@ -167,6 +180,10 @@ vcf.getMetadata= async that=>{ // extract metadata
 * 
 *
 * @param {Object} that Vcf library object.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* var tail = await vcf.getTail(v)
 *
 */
 vcf.getTail=async that=>{ // to be run after vcf.getMetadata, to find tail indexes to extablish span
@@ -184,6 +201,11 @@ vcf.getTail=async that=>{ // to be run after vcf.getMetadata, to find tail index
 *
 * @param {Object} that Vcf library object.
 * @param {Object} ini An object output of vcf.fetchGz, containing the following attributes: txt - text of the range just read, arrBuff - bytes read as array buffer, idx - indexes of this range, range - array with the start and end byte indexes, url - vcf file url.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let ini = await vcf.fetchGz([0,500000], v.url)
+* var indexes = await vcf.getIndexes(v, ini)
 *
 */
 vcf.getIndexes=(that,ini)=>{ 
@@ -222,10 +244,14 @@ vcf.getIndexes=(that,ini)=>{
 * Default query based on specific position of a chromosome
 * 
 *
-* @param {string} q Search parameter in the format 'chromosome,position'.
+* @param {string} [q=1,10485] Search parameter in the format 'chromosome,position'.
 * @param {Object} that Vcf library object.
 *
 * @returns {Object} Search result obkect, containing the following attributes: hit - array containing the vf table lines with the SNPs found in the chromosome an dposition searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object).
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* var result = await vcf.query('7,151040280', v)
 */
 vcf.query= async function(q='1,10485',that){
 	if(typeof(q)=='string'){ // chr,pos
@@ -319,6 +345,10 @@ vcf.query= async function(q='1,10485',that){
 * @param {Object} idxx An object corresponding to the idxx attribute found in the Vcf main library object.
 *
 * @returns {Object} Same object received as input but sorted.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* var sortedIndexes = await vcf.sortIdxx(v.idxx)
 */
 vcf.sortIdxx=(idxx)=>{
 	return idxx.sort((a,b)=>(a.ii[0]-b.ii[0]))
@@ -328,10 +358,13 @@ vcf.sortIdxx=(idxx)=>{
 * Get partial content as array buffer
 * 
 *
-* @param {array} range An array containing the start and end positions of the byte range to be read.
-* @param {string} url Vcf file url.
+* @param {array} [range=[0,1000]] An array containing the start and end positions of the byte range to be read.
+* @param {string} [url=test_4X_191.vcf] Vcf file url.
 *
 * @returns {array} Arraybuffer containing the portion of bytes read from the file.
+* 
+* @example
+* var arr_buffer = await vcf.getArrayBuffer([0,2000], 'test_4X_191.vcf')
 */
 vcf.getArrayBuffer=async(range=[0,1000],url='test_4X_191.vcf')=>{
     return await (await (fetch(url,{
@@ -346,11 +379,15 @@ vcf.getArrayBuffer=async(range=[0,1000],url='test_4X_191.vcf')=>{
 * Uncompress and retrieve content from a file portion
 * 
 *
-* @param {array|number} range An array containing the start and end positions of the byte range to be read, or a single number indicating the start.
-* @param {string} url Vcf file url.
-* @param {number} keyGap The gap length between keys.
+* @param {array|number} [range=0] An array containing the start and end positions of the byte range to be read, or a single number indicating the start.
+* @param {string} [url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz] Vcf file url.
+* @param {number} [keyGap=19999] The gap length between keys.
 *
 * @returns {Object} An object containing the following attributes: txt - text of the range just read, arrBuff - bytes read as array buffer, idx - indexes of this range, range - array with the start and end byte indexes, url - vcf file url.
+* 
+* @example
+* var content = await vcf.fetchGz([0,2000], 'https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz', 19999)
+* var content = await vcf.fetchGz(0, 'https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz', 19999)
 */
 vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz',keyGap=vcf.keyGap)=>{
    if(typeof(range)=="number"){
@@ -380,10 +417,14 @@ vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606
 * Build index for the entire file
 * 
 *
-* @param {string} url Vcf file url.
+* @param {string} [url=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20201026.vcf.gz] Vcf file url.
 * @param {number} size Vcf file size
 *
 * @returns {Object} An object containing the following attributes: chunks - array containing the chunk indexes, chrPos - Chromosome Positions found in the chunks.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* var index = await vcf.indexGz(v.url, v.size)
 */
 vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20201026.vcf.gz', size)=>{
     // index chunk locations and Chr:pos
@@ -426,9 +467,13 @@ vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinv
 * 
 *
 * @param {array} arr Byte array indexes of the current chunk.
-* @param {array} key A list of sixteen numbers representing the compression indexes.
+* @param {array} [key=[31,139,8,4,0,0,0,0,0,255,6,0,66,67,2,0]] A list of sixteen numbers representing the compression indexes.
 *
 * @returns {array} A list of the indexes from the current chunk that matched with the compression indexes.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* var matched = await vcf.indexGz( [21, 39, 39, 13, 9, 24, 4, 6, 27, 18, 2, 25, 35, 8, 26, 14, 18, 31, 23, 18], v.gzKey)
 */
 vcf.matchKey=(arr, key=vcf.gzKey)=>{
     let ind=arr.map((x,i)=>i) // the indexes
@@ -446,6 +491,12 @@ vcf.matchKey=(arr, key=vcf.gzKey)=>{
 * @param {string} filename Filename for exportation.
 *
 * @returns {Object} Compressed binary file.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* var index = await vcf.indexGz(v.url, v.size)
+* await vcf.compressIdx(index, 'indexFile.gz')
+* var content = await vcf.compressIdx(index)
 */
 vcf.compressIdx=function(idx,filename){
     // string it
@@ -461,9 +512,12 @@ vcf.compressIdx=function(idx,filename){
 * Obtain file size
 * 
 *
-* @param {string} url Vcf file url.
+* @param {string} [url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz] Vcf file url.
 *
 * @returns {number} Total file size.
+* 
+* @example
+* let size = await vcf.fileSize('https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz')
 */
 vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
     let response = await fetch(url,{
@@ -482,6 +536,12 @@ vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00
 * @param {string} filename Filename for exportation.
 *
 * @returns {HTMLAnchorElement} HTML anchor (<a />) element with the click event fired.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* var index = await vcf.indexGz(v.url, v.size)
+* var content = await vcf.compressIdx(index)
+* var tagA = await vcf.saveFile(content, 'indexFile.gz')
 */
 vcf.saveFile=function(x,fileName) { // x is the content of the file
 	// var bb = new Blob([x], {type: 'application/octet-binary'});
@@ -500,6 +560,9 @@ vcf.saveFile=function(x,fileName) { // x is the content of the file
 * 
 *
 * @param {string} url Library URL.
+* 
+* @example
+* vcf.loadScript('https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js')
 *
 */
 vcf.loadScript= async function(url){

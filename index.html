@@ -21,7 +21,8 @@
     <body>
         <div class="container-fluid">
             <div class="container">
-                <section id="introduction" >
+            
+                <section id="header">
                     <h1>
                         VCF 
                         <sup style="font-size:medium;color:green"><a href="https://dceg.cancer.gov/" target="_blank" style="color:green">DCEG</a></sup> <br>
@@ -34,152 +35,172 @@
                     </h1>
                     
                     <hr>
-                    
-                    <p>
-                        Exploring mechanisms to traverse compressed Variant Calling Formatted files remotely: 
-                        <b>without downloading them, and without a tbi file with content indexes</b>. 
-                        The rationale is the same advanced for digital pathology in <a href="https://www.jpathinformatics.org/article.asp?issn=2153-3539;year=2020;volume=11;issue=1;spage=29;epage=29;aulast=Bremer" target="_blank">imagebox2</a> by relying on range requests. For parsing full files see <a href="https://ibl.github.io/vcf" target="_blank">old project at IBL</a>.
-                    </p>
-                    
-                    <p> 
-                        Although the real action is in the console, this page will be used to test the JavaScript vcf SDK. To do so, select the URL of the remote VCF file (or use default test VCF file borrowed from <a href="https://www.nature.com/articles/s41598-019-49114-z" target="_blank">Tollefson 2019</a>), and then try different methods. 
-                        For examples of the real-world challange see <a href="https://ftp.ncbi.nlm.nih.gov/pub/clinvar" target="_blank">clinVar</a>, <a href="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/" target="_blank">snp</a> or <a href="http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/" target="_blank">1000genomes</a>.
-                    </p>
                 </section>
-                
-                <section id="usage">
-                    <div class="row">
-                        <div class="col-12">
-                            <h3>Data</h3>
-                            <p> The data below will be used to demonstrate the main functions of our library, it contains all SNPs found in the Human genome. Make sure that the CORS is enabled in the data server, otherwise is not possible accessing it. </p>
-                            <input id="vcfURL" size=50 value="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz"></p>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-12">
-                            <h3> 1 - Reading a slice of the data <span style="font-size:small; color:green; display: none;" id='infoFile'>(Total: <span id="filesize" style="color:red">...</span>)</span> </h3>
-                            <p> Choose an interval to read, then an object of VCF library will be initialized and will return the corresponding data with the chosen byte range.  </p>
-                            
-                            <form>
-                                <div class="form-group col-6">
-                                    <input type="number" class="form-control mr-3 fields"  id="rangeStart" size=10 min=0 value=0 />
-                                    <div  class="mr-3 fields " style="text-align: center;" > up to </div>
-                                    <input type="number" class="form-control mr-3 fields"  id="rangeEnd" min=100 size=10 value=1000 />
-                                    <button type="button" class="btn btn-primary" id="readRange" onclick="readRangeFun()" >Read</button>
-                                </div>    
-                            </form>
-                            <textarea id="rangeTextArea" style="width:20em;color:lime;background-color:black"> > Choose range click on Read</textarea>
-                        </div>
-                    </div>
-                    
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <h3> 2 - Filtering chromosomes and positions </h3>
-                            <p> Choose a specific chromosome and position to search across the vcf file. Our search algorithm uses an strategy to optimize the search, returning the respective results in miliseconds. </p>
-                            
-                            <form>
-                                <div class="form-group col-8">
-                                    <div  class="mr-3 fields" style="text-align: right;" id='chroms' > Chromosome: </div>
-                                    <select class="form-control mr-3 fields" style=" width: 200px !important;" id="chrom" value=0 > <option value='0'>Select a chromosome </option> </select>
-                                    <div  class="mr-3 fields" style="text-align: right;" > Position: </div>
-                                    <input type="number" class="form-control mr-3 fields" style=" width: 150px !important;" id="position" min=1000 size=10 value=1000 />
-                                    <button type="button" class="btn btn-primary" id="filter" onclick="filterFun()" disabled=true>Filter</button>
-                                </div>    
-                            </form>
-                            
-                            <table id="filteredSnps"> </table>
-                        </div>
-                    </div>
-                </section>
-
-<script>
-    //fetch("00-All.vcf.gz.idx.json").then(x=>x.json().then(x=>{idx=x;readRange.disabled=false}))
-    var v = {}
-    var datatable = {}
-    var columns = []
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
-    
-    readRangeFun=async _=>{
-        readRange.innerHTML="Reading ..."
-        readRange.disabled=true
-        infoFile.style.display="none"
-        
-        if(rangeTextArea.style.height.length==0){
-            rangeTextArea.style.height='10em'
-            rangeTextArea.style.width='100%'
-        }
-        
-        let url=vcfURL.value;   
-        let range=[parseInt(rangeStart.value),parseInt(rangeEnd.value)]
-        
-        v = await new Vcf(url)
-        var txtChrom = "<option value='0'>Select a chromosome </option> "
-        v.chrCode.forEach( x => { if(x!='0') { txtChrom+=`<option value="${x}">Chromosome ${x}</option>` } } )
-        chrom.innerHTML=txtChrom
-        
-        if( url.indexOf('.gz')!=-1 ){
-            let start=range[0]
-            console.log(range)
-            let res = await v.fetchGz(range)
-            rangeTextArea.value= (res.txt)
-        }else{
-            r = await v.fetchRange(range)
-            rangeTextArea.value=(await r.text())
-        }
-        var size = await vcf.fileSize(url)
-        filesize.innerHTML = (size/1000000).toFixed(2)+'M'
-        
-        /*while(v.cols==undefined){
-            sleep(100)
-        }*/
-        
-        readRange.innerHTML="Read"
-        readRange.disabled=false
-        infoFile.style.display="block"
-        
-        setTimeout(function(){
-            v.cols.forEach( x => { columns.push( {'title': x} ) } )
-            console.log(columns)
-            $(document).ready(function() {
-                datatable = $('#filteredSnps').dataTable( {
-                    "data": [],
-                    "columns": columns
-                } );     
-                filteredSnps_wrapper.style.display='none'
-            } );
-            filter.disabled=false
-        }, 3000)
-    }
-    
-    filterFun = async _=> {
-        filter.innerHTML="Filtering ..."
-        filter.disabled=true
-        
-        var chromosome = chrom.value
-        if(chromosome!='0'){
-            var pos = position.value
-            var q = `${chromosome},${pos}`
-            var result = await v.query(q)
-            filteredSnps_wrapper.style.display='block'
             
-            $(document).ready(function() {
-               datatable.fnDestroy()
-               datatable = $('#filteredSnps').dataTable( {
-                    "data": result.hit,
-                    "columns": columns
-                } );     
-            } );
-        }
-        else{
-            alert('Select a valid chromosome')
-        }
+                <ul class="nav nav-tabs" id="options" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">About VCF Library</button>
+                  </li>
+                  
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="documentation-tab" data-bs-toggle="tab" data-bs-target="#documentation" type="button" role="tab" aria-controls="documentation" aria-selected="false">Documentation</button>
+                  </li>
+                </ul>
+                
+                <div class="tab-content" id="optionsContent">
+                    <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                
+                        <section id="introduction" class="mt-3">
+                            <p>
+                                Exploring mechanisms to traverse compressed Variant Calling Formatted files remotely: 
+                                <b>without downloading them, and without a tbi file with content indexes</b>. 
+                                The rationale is the same advanced for digital pathology in <a href="https://www.jpathinformatics.org/article.asp?issn=2153-3539;year=2020;volume=11;issue=1;spage=29;epage=29;aulast=Bremer" target="_blank">imagebox2</a> by relying on range requests. For parsing full files see <a href="https://ibl.github.io/vcf" target="_blank">old project at IBL</a>.
+                            </p>
+                            
+                            <p> 
+                                Although the real action is in the console, this page will be used to test the JavaScript vcf SDK. To do so, select the URL of the remote VCF file (or use default test VCF file borrowed from <a href="https://www.nature.com/articles/s41598-019-49114-z" target="_blank">Tollefson 2019</a>), and then try different methods. 
+                                For examples of the real-world challange see <a href="https://ftp.ncbi.nlm.nih.gov/pub/clinvar" target="_blank">clinVar</a>, <a href="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/" target="_blank">snp</a> or <a href="http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/" target="_blank">1000genomes</a>.
+                            </p>
+                        </section>
+                        
+                        <section id="usage">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h3>Data</h3>
+                                    <p> The data below will be used to demonstrate the main functions of our library, it contains all SNPs found in the Human genome. Make sure that the CORS is enabled in the data server, otherwise is not possible accessing it. </p>
+                                    <input id="vcfURL" size=50 value="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz"></p>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-12">
+                                    <h3> 1 - Reading a slice of the data <span style="font-size:small; color:green; display: none;" id='infoFile'>(Total: <span id="filesize" style="color:red">...</span>)</span> </h3>
+                                    <p> Choose an interval to read, then an object of VCF library will be initialized and will return the corresponding data with the chosen byte range.  </p>
+                                    
+                                    <form>
+                                        <div class="form-group col-6">
+                                            <input type="number" class="form-control mr-3 fields"  id="rangeStart" size=10 min=0 value=0 />
+                                            <div  class="mr-3 fields " style="text-align: center;" > up to </div>
+                                            <input type="number" class="form-control mr-3 fields"  id="rangeEnd" min=100 size=10 value=1000 />
+                                            <button type="button" class="btn btn-primary" id="readRange" onclick="readRangeFun()" >Read</button>
+                                        </div>    
+                                    </form>
+                                    <textarea id="rangeTextArea" style="width:20em;color:lime;background-color:black"> > Choose range and click on Read</textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h3> 2 - Filtering chromosomes and positions </h3>
+                                    <p> Choose a specific chromosome and position to search across the vcf file. Our search algorithm uses an strategy to optimize the search, returning the respective results in miliseconds. 
+                                    <br />
+                                    Examples to try it out: chromosome 7 and position 151040280 (7,151040280), chromosome 10 and position 133421085 (10,133421085), chromosome 17 and position 7675353 (17,7675353).</p>
+                                    
+                                    <form>
+                                        <div class="form-group col-8">
+                                            <div  class="mr-3 fields" style="text-align: right;" id='chroms' > Chromosome: </div>
+                                            <select class="form-control mr-3 fields" style=" width: 200px !important;" id="chrom" value=0 > <option value='0'>Select a chromosome </option> </select>
+                                            <div  class="mr-3 fields" style="text-align: right;" > Position: </div>
+                                            <input type="number" class="form-control mr-3 fields" style=" width: 150px !important;" id="position" min=1000 size=10 value=1000 />
+                                            <button type="button" class="btn btn-primary" id="filter" onclick="filterFun()" disabled=true>Filter</button>
+                                        </div>    
+                                    </form>
+                                    
+                                    <table id="filteredSnps"> </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="documentation" role="tabpanel" aria-labelledby="documentation-tab">
+                        <section id="documentation-content" class="mt-3">
+                            
+                        </section>
+                    </div>
+                </div>
+                
+                <script>
+                    //fetch("00-All.vcf.gz.idx.json").then(x=>x.json().then(x=>{idx=x;readRange.disabled=false}))
+                    var v = {}
+                    var datatable = {}
+                    var columns = []
+                    
+                    readRangeFun=async _=>{
+                        readRange.innerHTML="Reading ..."
+                        readRange.disabled=true
+                        infoFile.style.display="none"
+                        
+                        if(rangeTextArea.style.height.length==0){
+                            rangeTextArea.style.height='10em'
+                            rangeTextArea.style.width='100%'
+                        }
+                        
+                        let url=vcfURL.value;   
+                        let range=[parseInt(rangeStart.value),parseInt(rangeEnd.value)]
+                        
+                        v = await new Vcf(url)
+                        var txtChrom = "<option value='0'>Select a chromosome </option> "
+                        v.chrCode.forEach( x => { if(x!='0') { txtChrom+=`<option value="${x}">Chromosome ${x}</option>` } } )
+                        chrom.innerHTML=txtChrom
+                        
+                        if( url.indexOf('.gz')!=-1 ){
+                            let start=range[0]
+                            console.log(range)
+                            let res = await v.fetchGz(range)
+                            rangeTextArea.value= (res.txt)
+                        }else{
+                            r = await v.fetchRange(range)
+                            rangeTextArea.value=(await r.text())
+                        }
+                        var size = await vcf.fileSize(url)
+                        filesize.innerHTML = (size/1000000).toFixed(2)+'M'
+                        
+                        readRange.innerHTML="Read"
+                        readRange.disabled=false
+                        infoFile.style.display="block"
+                        
+                        setTimeout(function(){
+                            v.cols.forEach( x => { columns.push( {'title': x} ) } )
+                            console.log(columns)
+                            $(document).ready(function() {
+                                datatable = $('#filteredSnps').dataTable( {
+                                    "data": [],
+                                    "columns": columns
+                                } );     
+                                filteredSnps_wrapper.style.display='none'
+                            } );
+                            filter.disabled=false
+                        }, 3000)
+                    }
+                    
+                    filterFun = async _=> {
+                        filter.innerHTML="Filtering ..."
+                        filter.disabled=true
+                        
+                        var chromosome = chrom.value
+                        if(chromosome!='0'){
+                            var pos = position.value
+                            var q = `${chromosome},${pos}`
+                            var result = await v.query(q)
+                            filteredSnps_wrapper.style.display='block'
+                            
+                            $(document).ready(function() {
+                               datatable.fnDestroy()
+                               datatable = $('#filteredSnps').dataTable( {
+                                    "data": result.hit,
+                                    "columns": columns
+                                } );     
+                            } );
+                        }
+                        else{
+                            alert('Select a valid chromosome')
+                        }
 
-        filter.innerHTML="Filter"
-        filter.disabled=false
-        
-    }
-</script>
+                        filter.innerHTML="Filter"
+                        filter.disabled=false
+                        
+                    }
+                </script>
             </div>
         </div>
 
