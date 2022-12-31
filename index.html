@@ -1,53 +1,192 @@
 <html>
-<head>
-    <title>VCF</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap.native/2.0.27/bootstrap-native-v4.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js"></script>
-    <link rel="icon" href="favicon.ico" type="image/x-icon"/>
-    <script src="vcf.js"></script>
-    <link rel="stylesheet" href="vcf.css">
-</head>
-<body>
-<h1>VCF <sup style="font-size:medium;color:green"><a href="https://dceg.cancer.gov/" target="_blank" style="color:green">DCEG</a></sup><br><span style="font-size:small;color:blue">[<a href="https://github.com/episphere/vcf" target="_blank">code</a>] [<a href="https://github.com/episphere/vcf/issues" target="_blank">issues</a>] [<a href="https://observablehq.com/@episphere/vcf" target="_blank" style="font-size:small;">notebook</a>] [<a href="https://gitter.im/episphere/terra" target="_blank">gitter</a>]</span></h1>
-<hr>
-<p>Exploring mechanisms to traverse compressed Variant Calling Formatted files remotely: <b>without downloading them, and without a tbi file with content indexes</b>. The rationale is the same advanced for digital pathology in <a href="https://www.jpathinformatics.org/article.asp?issn=2153-3539;year=2020;volume=11;issue=1;spage=29;epage=29;aulast=Bremer" target="_blank">imagebox2</a> by relying on range requests. For parsing full files see <a href="https://ibl.github.io/vcf" target="_blank">old project at IBL</a>.</p>
-<p> Although the real action is in the console, this page will be used to test the JavaScript vcf SDK. To do so, select the URL of the remote VCF file (or use default test VCF file borrowed from <a href="https://www.nature.com/articles/s41598-019-49114-z" target="_blank">Tollefson 2019</a>), and then try different methods. For examples of the real-world challange see <a href="https://ftp.ncbi.nlm.nih.gov/pub/clinvar" target="_blank">clinVar</a>, <a href="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/" target="_blank">snp</a> or <a href="http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/" target="_blank">1000genomes</a>.</p>
-<!--<p><button type="button" class="btn btn-primary">Primary</button></p>-->
-<p>
-<h2>URL of VCF file (cors)</h2>
-<p>
-<input id="vcfURL" size=50 value="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz"></p>
-<h3>Read byte range <span style="font-size:small;color:green">(total: <span id="filesize" style="color:red">...</span>)</span></h3>
-<input id="rangeStart" size=10 value=0> - <input id="rangeEnd" size=10 value=1000> <button type="button" class="btn btn-primary" id="readRange" onclick="readRangeFun()" disabled=true>Read</button>
-<h3>Read Chromosome-position <span style="font-size:small;color:green"></h3>
-Chromossome <input id="chrStart" size=4 value=0> - <input id="posStart" size=10 value=1000> <button type="button" class="btn btn-primary" id="readChrPos" onclick="readChrPosFun()" disabled=true>Read</button>
-<br><textarea id="rangeTextArea" style="width:20em;color:lime;background-color:black"> > chose range or chrmossome-position and click on Read</textarea>
-</p>
+    <head>
+        <title>VCF</title>
+        
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap.native/2.0.27/bootstrap-native-v4.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js"></script>
+    
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        
+        <link rel="icon" href="favicon.ico" type="image/x-icon"/>
+        <script src="vcf.js"></script>
+        
+        <link href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css" rel="stylesheet"  crossorigin="anonymous">
+        <link rel="stylesheet" href="vcf.css">
+        
+    </head>
+    
+    <body>
+        <div class="container-fluid">
+            <div class="container">
+                <section id="introduction" >
+                    <h1>
+                        VCF 
+                        <sup style="font-size:medium;color:green"><a href="https://dceg.cancer.gov/" target="_blank" style="color:green">DCEG</a></sup> <br>
+                        <span style="font-size:small;color:blue">
+                            [<a href="https://github.com/episphere/vcf" target="_blank">code</a>] 
+                            [<a href="https://github.com/episphere/vcf/issues" target="_blank">issues</a>] 
+                            [<a href="https://observablehq.com/@episphere/vcf" target="_blank" style="font-size:small;">notebook</a>] 
+                            [<a href="https://gitter.im/episphere/terra" target="_blank">gitter</a>]
+                        </span>
+                    </h1>
+                    
+                    <hr>
+                    
+                    <p>
+                        Exploring mechanisms to traverse compressed Variant Calling Formatted files remotely: 
+                        <b>without downloading them, and without a tbi file with content indexes</b>. 
+                        The rationale is the same advanced for digital pathology in <a href="https://www.jpathinformatics.org/article.asp?issn=2153-3539;year=2020;volume=11;issue=1;spage=29;epage=29;aulast=Bremer" target="_blank">imagebox2</a> by relying on range requests. For parsing full files see <a href="https://ibl.github.io/vcf" target="_blank">old project at IBL</a>.
+                    </p>
+                    
+                    <p> 
+                        Although the real action is in the console, this page will be used to test the JavaScript vcf SDK. To do so, select the URL of the remote VCF file (or use default test VCF file borrowed from <a href="https://www.nature.com/articles/s41598-019-49114-z" target="_blank">Tollefson 2019</a>), and then try different methods. 
+                        For examples of the real-world challange see <a href="https://ftp.ncbi.nlm.nih.gov/pub/clinvar" target="_blank">clinVar</a>, <a href="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/" target="_blank">snp</a> or <a href="http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/" target="_blank">1000genomes</a>.
+                    </p>
+                </section>
+                
+                <section id="usage">
+                    <div class="row">
+                        <div class="col-12">
+                            <h3>Data</h3>
+                            <p> The data below will be used to demonstrate the main functions of our library, it contains all SNPs found in the Human genome. Make sure that the CORS is enabled in the data server, otherwise is not possible accessing it. </p>
+                            <input id="vcfURL" size=50 value="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h3> 1 - Reading a slice of the data <span style="font-size:small; color:green; display: none;" id='infoFile'>(Total: <span id="filesize" style="color:red">...</span>)</span> </h3>
+                            <p> Choose an interval to read, then an object of VCF library will be initialized and will return the corresponding data with the chosen byte range.  </p>
+                            
+                            <form>
+                                <div class="form-group col-6">
+                                    <input type="number" class="form-control mr-3 fields"  id="rangeStart" size=10 min=0 value=0 />
+                                    <div  class="mr-3 fields " style="text-align: center;" > up to </div>
+                                    <input type="number" class="form-control mr-3 fields"  id="rangeEnd" min=100 size=10 value=1000 />
+                                    <button type="button" class="btn btn-primary" id="readRange" onclick="readRangeFun()" >Read</button>
+                                </div>    
+                            </form>
+                            <textarea id="rangeTextArea" style="width:20em;color:lime;background-color:black"> > Choose range click on Read</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h3> 2 - Filtering chromosomes and positions </h3>
+                            <p> Choose a specific chromosome and position to search across the vcf file. Our search algorithm uses an strategy to optimize the search, returning the respective results in miliseconds. </p>
+                            
+                            <form>
+                                <div class="form-group col-8">
+                                    <div  class="mr-3 fields" style="text-align: right;" id='chroms' > Chromosome: </div>
+                                    <select class="form-control mr-3 fields" style=" width: 200px !important;" id="chrom" value=0 > <option value='0'>Select a chromosome </option> </select>
+                                    <div  class="mr-3 fields" style="text-align: right;" > Position: </div>
+                                    <input type="number" class="form-control mr-3 fields" style=" width: 150px !important;" id="position" min=1000 size=10 value=1000 />
+                                    <button type="button" class="btn btn-primary" id="filter" onclick="filterFun()" disabled=true>Filter</button>
+                                </div>    
+                            </form>
+                            
+                            <table id="filteredSnps"> </table>
+                        </div>
+                    </div>
+                </section>
 
 <script>
     //fetch("00-All.vcf.gz.idx.json").then(x=>x.json().then(x=>{idx=x;readRange.disabled=false}))
+    var v = {}
+    var datatable = {}
+    var columns = []
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    
     readRangeFun=async _=>{
+        readRange.innerHTML="Reading ..."
+        readRange.disabled=true
+        infoFile.style.display="none"
+        
         if(rangeTextArea.style.height.length==0){
             rangeTextArea.style.height='10em'
             rangeTextArea.style.width='100%'
         }
-        let url=vcfURL.value;
+        
+        let url=vcfURL.value;   
         let range=[parseInt(rangeStart.value),parseInt(rangeEnd.value)]
-        let v = new vcf(vcfURL.value)
-        if(vcfURL.value=="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz"){
+        
+        v = await new Vcf(url)
+        var txtChrom = "<option value='0'>Select a chromosome </option> "
+        v.chrCode.forEach( x => { if(x!='0') { txtChrom+=`<option value="${x}">Chromosome ${x}</option>` } } )
+        chrom.innerHTML=txtChrom
+        
+        if( url.indexOf('.gz')!=-1 ){
             let start=range[0]
-            range[0]=idx.chunks.filter(x=>x<=range[0]).slice(-1)[0]
-            console.log("indexed gz",range)
-            let res = await v.fetch(range)
-            rangeTextArea.value=(res.txt).slice(start-range[0])
+            console.log(range)
+            let res = await v.fetchGz(range)
+            rangeTextArea.value= (res.txt)
         }else{
-            rangeTextArea.value=(await v.fetch(range))
+            r = await v.fetchRange(range)
+            rangeTextArea.value=(await r.text())
         }
-        filesize.textContent=await v.size/1000000+'M'
+        var size = await vcf.fileSize(url)
+        filesize.innerHTML = (size/1000000).toFixed(2)+'M'
+        
+        /*while(v.cols==undefined){
+            sleep(100)
+        }*/
+        
+        readRange.innerHTML="Read"
+        readRange.disabled=false
+        infoFile.style.display="block"
+        
+        setTimeout(function(){
+            v.cols.forEach( x => { columns.push( {'title': x} ) } )
+            console.log(columns)
+            $(document).ready(function() {
+                datatable = $('#filteredSnps').dataTable( {
+                    "data": [],
+                    "columns": columns
+                } );     
+                filteredSnps_wrapper.style.display='none'
+            } );
+            filter.disabled=false
+        }, 3000)
+    }
+    
+    filterFun = async _=> {
+        filter.innerHTML="Filtering ..."
+        filter.disabled=true
+        
+        var chromosome = chrom.value
+        if(chromosome!='0'){
+            var pos = position.value
+            var q = `${chromosome},${pos}`
+            var result = await v.query(q)
+            filteredSnps_wrapper.style.display='block'
+            
+            $(document).ready(function() {
+               datatable.fnDestroy()
+               datatable = $('#filteredSnps').dataTable( {
+                    "data": result.hit,
+                    "columns": columns
+                } );     
+            } );
+        }
+        else{
+            alert('Select a valid chromosome')
+        }
+
+        filter.innerHTML="Filter"
+        filter.disabled=false
+        
     }
 </script>
-</body>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.5.1.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
+        
+    </body>
 </html>
 

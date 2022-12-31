@@ -51,3 +51,8 @@ a:hover {
 input {
     color:blue
 }
+
+.fields{
+    width: 100px !important; 
+    display: inline-block;
+}

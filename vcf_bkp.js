@@ -1,68 +1,27 @@
 console.log('vcf.js loaded')
 
-/* Initializes object with default example parameters */
-vcf={}
-vcf.gzKey=[31, 139, 8, 4, 0, 0, 0, 0, 0, 255, 6, 0, 66, 67, 2, 0]
-vcf.keyGap=20000-1
-vcf.chrCode='1-22,X,Y,XY,MT,0'
-
-/**
- * Main global portable module.
- * @namespace 
- * @property {Function} Vcf - {@link Vcf}
- *
- * @namespace vcf
- * @property {Function} fetchRange - {@link vcf.fetchRange}
- * @property {Function} getMetadata - {@link vcf.getMetadata}
- * @property {Function} getTail - {@link vcf.getTail}
- * @property {Function} getIndexes - {@link vcf.getIndexes}
- * @property {Function} query - {@link vcf.query}
- * @property {Function} sortIdxx - {@link vcf.sortIdxx}
- * @property {Function} getArrayBuffer - {@link vcf.getArrayBuffer}
- * @property {Function} fetchGz - {@link vcf.fetchGz}
- * @property {Function} matchKey - {@link vcf.matchKey}
- * @property {Function} compressIdx - {@link vcf.compressIdx}
- * @property {Function} fileSize - {@link vcf.fileSize}
- * @property {Function} saveFile - {@link vcf.saveFile}
- * @property {Function} loadScript - {@link vcf.loadScript}
- */
- 
- /**
- *
- *
- * @object Vcf
- * @attribute {string} url The vcf file url.
- * @attribute {Date} date Date object that the object was created.
- * @attribute {number} keyGap The gap length between keys.
- * @attribute {string} chrCode Chromosomes that will be used (Ex.: '2' or '1-22' or '1-22,X,Y,XY,MT' or 'X,Y').
- * @attribute {number} size Vcf file total size.
- * @attribute {array} gzKey Vcf file compression chunk indexes.
- * @attribute {array} meta Metadata lines.
- * @attribute {array} cols Table columns identifying the data items.
- * @attribute {array} ii00 Chunk Byte start indexes.
- * @attribute {array} idxx Array of objects concerning the chunk contents, each of these containing the following attributes: chrStart - start chromosome, chrEnd - end chromosome, dt - list of the vcf table containing the SNPs information in the range of chromosome and positions, posStart - Start position in the start chromosome, posEnd - End position in the end chromosome, ii - Byte slice indexes.
- * @attribute {Function} indexGz Same as vcf.indexGz
- * @attribute {Function} query Same as vcf.query
- * @attribute {Function} getArrayBuffer Same as vcf.getArrayBuffer
- * @attribute {Function} fetchGz Same as vcf.fetchGz
- * @attribute {Function} fetchRange Same as vcf.fetchRange
- */
-
-/** 
-* Initializes main library object.
-*
-* @param {string} url The vcf file url.
-* @param {number} keyGap The gap length between keys.
-* @param {string} chrCode Chromosomes that will be used (Ex.: '2' or '1-22' or '1-22,X,Y,XY,MT' or 'X,Y').
-*
-* @returns {Object} Vcf library object.
-*/
-Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', keyGap=vcf.keyGap, chrCode=vcf.chrCode){
-    //alternative url https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz'){
-    
-    /* Initializes object with the direct attributes*/
+//vcf = function (url='test_4X_191.vcf'){
+vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz',keyGap,chrCode=vcf.chrCode){
+//vcf = function (url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz'){
+    //vcf = function (url='clinvar_20201226.vcf.gz'){
+    // 'https://raw.githubusercontent.com/compbiocore/VariantVisualization.jl/master/test/test_files/test_4X_191.vcf
+    //this.url=url||
     this.url=url
     this.date=new Date()
+    let that=this;
+    
+    this.indexGz=async(url=this.url)=>{
+        that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
+        return that.indexGz
+    }
+    this.query=async function(q='1,10485'){
+		return await vcf.query(q,that)
+	}
+    //this.getChrCode = async ()=>vcf.getChrCode(that)
+    this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
+    	return vcf.getArrayBuffer(range,url)
+    }
+    
     this.keyGap=keyGap||vcf.keyGap
     
     this.chrCode=chrCode
@@ -78,63 +37,53 @@ Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
 		}
 		this.chrCode=this.chrCode.split(',')
 	}
-    
-    let that=this;
-    
-    /* Initialize functions of the library in the object */
-    this.indexGz=async(url=this.url)=>{
-        that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
-        return that.indexGz
-    }
-    this.query=async function(q='1,10485'){
-		return await vcf.query(q,that)
-	}
-    this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
-    	return vcf.getArrayBuffer(range,url)
-    }
+	
     this.fetchGz = async(range=[0,1000],url=this.url)=>{
     	let res = await vcf.fetchGz(range,url)
-    	vcf.getIndexes(this,res)
+    	// record index, unlike vcf.fetchGz
+    	vcf.idxx(this,res)
     	//debugger
     	return res
     }
-    this.fetchRange=async(range=[0,1000])=>{
+
+    this.fetch=async(range=[0,1000])=>{
+
         // check or retrieve header
         if(!this.meta){
-        	await vcf.getMetadata(this)
+        	await vcf.meta(this)
         }
-        let res = await vcf.fetchRange(range,url=this.url)
+
+
+        let res = await vcf.fetchGz(range,url=this.url)
         return res
     };
 
-    (async function(){ 
-        /* Initializes object with the computed attributes*/
-        
+    //this.query=async q=>await vcf.query(q,that)
+
+    (async function(){ // fullfill these promises asap
     	that.size=await vcf.fileSize(url);
-    	
-    	that.key=await (await vcf.fetchRange([0,15],that.url)).arrayBuffer()
+    	that.key=await (await vcf.fetch([0,15],that.url)).arrayBuffer()
     	const dv = new DataView(that.key)
-        vcf.gzKey = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // pick key from first 16 integers
-        that.gzKey = vcf.gzKey
+        that.key = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // pick key from first 16 integers
+        console.log(that.key)
+        await vcf.meta(that) // extract metadata
+        await vcf.tail(that)
         
-        await vcf.getMetadata(that) 
-        await vcf.getTail(that)
+        ar = await that.getArrayBuffer()
+        that.gzKey = new Int8Array(ar.slice(0,16));
     })(); 
     
+    //this.indexGz2=vcf.indexGz(url,that.size) // note how the indexGz function is replaced by the literal result
 }
 
-/** 
-* Obtain a slice according to a byte range from the file.
-* 
-*
-* @param {array} range An array with the start and end positions (Ex.: [0,1000]).
-* @param {string} url The vcf file url.
-*
-* @returns {Object} Request object of partial content (http code 206).
-*/
-vcf.fetchRange=(range,url)=>{
+vcf.gzKey=[31, 139, 8, 4, 0, 0, 0, 0, 0, 255, 6, 0, 66, 67, 2, 0]
+// just an example of a key, better retrieve it from the first 16 integers of the array buffer
+vcf.keyGap=20000-1
+vcf.chrCode='1-22,X,Y,XY,MT,0'
+
+vcf.fetch=(range,url)=>{
 	range[0]=Math.max(range[0],0) // to stay in range
-    
+    //console.log(range)
     return fetch(url,{
         headers: {
             'content-type': 'multipart/byteranges',
@@ -143,54 +92,35 @@ vcf.fetchRange=(range,url)=>{
     })
 }
 
-/** 
-* Extracts metadata from compressed file.
-* 
-*
-* @param {Object} that Vcf library object.
-*
-* @returns {array} Lines of metadata of the vcf file.
-*/
-vcf.getMetadata= async that=>{ // extract metadata
+vcf.meta= async that=>{ // extract metadata
 	let ini = await vcf.fetchGz([0,500000],that.url) // this should probably have the range automated to detect end of header
 	let arr = ini.txt.split(/\n/g)
     that.meta=arr.filter(r=>r.match(/^##/))
     that.cols=arr[that.meta.length].slice(1).split(/\t/) // column names
     console.log(`Columns: ${that.cols}`)
     let vals = arr[that.meta.length+1].split(/\t/g)
-    vcf.getIndexes(that,ini)
+    //that.idxx = that.idxx || [{ki:0,chr:parseInt(vals[0]),pos:parseInt(vals[1])}]
+    vcf.idxx(that,ini)
     return that.meta
 }
 
-/** 
-* Find the last rows of the compressed file, requires getMetadata to find tail indexes to extablish span.
-* 
-*
-* @param {Object} that Vcf library object.
-*
-*/
-vcf.getTail=async that=>{ // to be run after vcf.getMetadata, to find tail indexes to extablish span
+vcf.tail=async that=>{ // to be run after vcf.meta, to find tail indexes to extablish span
 	if(!that.meta||!that.idxx){
-		await vcf.getMetadata(that)
+		await vcf.meta(that)
 	}
 	let ini = await vcf.fetchGz(that.size-that.keyGap)
-	vcf.getIndexes(that,ini)
+	vcf.idxx(that,ini)
 	//debugger
 }
 
-/** 
-* Index decompressed content.
-* 
-*
-* @param {Object} that Vcf library object.
-* @param {Object} ini An object output of vcf.fetchGz, containing the following attributes: txt - text of the range just read, arrBuff - bytes read as array buffer, idx - indexes of this range, range - array with the start and end byte indexes, url - vcf file url.
-*
-*/
-vcf.getIndexes=(that,ini)=>{ 
+vcf.idxx=(that,ini)=>{ // index decompressed content
+    //console.log('indexed ini:',ini)
+    // extract data rows
     let dt = ini.txt.split(/\n/g).filter(x=>!x.match(/^#/)).map(r=>r.split(/\t/g))
-    
+    //console.log('dt:',dt)
+    // find first full row
     if(dt.length<2){
-    	console.log('Error: No data was read')
+    	//debugger
     }
     if(dt.length>1){
     	let firstRow = dt[0]
@@ -201,11 +131,14 @@ vcf.getIndexes=(that,ini)=>{
 		let lastRow=dt.slice(-2,-1)[0]
 		that.idxx = that.idxx || []
 		that.ii00 = that.ii00 || []
-		
+		//if(that.idxx.length>0){
+		//let ii00 = that.idxx.map(x=>x.ii[0]) // maybe we should keep this
 		if(!that.ii00.includes(ini.idx[0])){ // if this is new
 			that.ii00.push(ini.idx[0]) // update index of start indexes
 			that.idxx.push({
 				ii:ini.idx,
+				//chrStart:vcf.parseInt(firstRow[0]),
+				//chrEnd:vcf.parseInt(lastRow[0]),
 				chrStart:firstRow[0],
 				chrEnd:lastRow[0],
 				posStart:parseInt(firstRow[1]),
@@ -216,31 +149,39 @@ vcf.getIndexes=(that,ini)=>{
 			that.ii00=that.ii00.sort((a,b)=>a>b?1:-1)
 		}
     }
+		
+    //}
+			
+    //debugger
 }
 
-/** 
-* Default query based on specific position of a chromosome
-* 
-*
-* @param {string} q Search parameter in the format 'chromosome,position'.
-* @param {Object} that Vcf library object.
-*
-* @returns {Object} Search result obkect, containing the following attributes: hit - array containing the vf table lines with the SNPs found in the chromosome an dposition searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object).
-*/
+vcf.parseInt=x=>{
+	if(x.match(/^\d+$/)){
+		return parseInt(x)
+	}else{
+		return x
+	}
+}
+
 vcf.query= async function(q='1,10485',that){
+	// read chrCode into array
+	//if(typeof(that.chrCode)=='string'){
+	//	that.chrCode=that.chrCode.split(',')
+	//}
 	if(typeof(q)=='string'){ // chr,pos
 		q=q.split(',') // chr kept as string
 		q[1]=parseFloat(q[1]) // pos converted into number
 		q[0]=that.chrCode.indexOf(q[0]) // chr converted into index if chrCode array
 	}
-	
+	// q=q.map(qi=>qi.toString()) // makign sure the elements of the query array are strings
 	// start iterative querying
 	console.log(`range search for (${q})`)
 	// 1 -  find bounds
+	//let n = that.idxx.length
 	let val={range:undefined} // matching results will be pushed here
 	let j=0  // counter
 	// Make sure to start i at the range that precedes the query
-	
+	//debugger
 	let i=0
 	for(i=0;i<that.idxx.length;i++){
 		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
@@ -299,6 +240,49 @@ vcf.query= async function(q='1,10485',that){
 					    
 				    }
 			    }
+				    
+			    /*
+			    if((posStart<q[1])){ // below or at pos target for that chr
+				    console.log(`range #${i} lower bound: ${that.idxx[i].chrStart},${posStart} <= (${that.chrCode[q[0]]},${q[1]})`)
+				    // Check upper boundary
+				    if (chrEnd<=q[0]){ // below or at end chr target
+					    if(posEnd>=q[1]){ // below or at pos target for that chr
+						    console.log(`range #${i} upper bound: ${that.idxx[i].chrEnd},${posEnd} => (${that.chrCode[q[0]]},${q[1]})`)
+						    console.log('range found! looking for value within range')
+						    //that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]).filter(r=>parseInt(r[1])==q[1])
+						    let matches=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]).filter(r=>r[1]==q[1])
+						    if(matches.length!=0){
+							    matches.forEach(mtxi=>val.push(matches))	
+						    }
+					    }else{
+						    console.log('not found in position ranges') // find out if a new reading is needed
+						    if(i!=(that.idxx.length-1)){ // this is not the end range 
+							    let nextChrStart = that.chrCode.indexOf(that.idxx[i+1].chrStart) // the index of the chromossome, not the chromossome 
+							    let nextPosStart = that.idxx[i+1].posStart
+							    let gap=false
+							    if(nextChrStart>parseInt(q[0])){
+								    gap=true
+							    }else if((nextChrStart==q[0])&(nextPosStart>q[1])){
+								    gap=true
+							    }
+							    if(gap){
+								    //debugger
+								    i = i>0? i-1 : 0
+								    await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+								    //debugger
+							    }
+							    //if(nextChrStart==parseInt(q[0])&(nextPosStart>))
+							    //debugger
+							    //i = i-1
+							    //debugger
+						    }else{
+							    console.log(`#${i} - this was the last range`)
+						    }
+					    }
+				    }
+			    }
+			    */
+			    //debugger
 		    }
 		}
 		else{
@@ -312,27 +296,97 @@ vcf.query= async function(q='1,10485',that){
 	return val
 }
 
-/** 
-* Sort the indexes retrieved
-* 
-*
-* @param {Object} idxx An object corresponding to the idxx attribute found in the Vcf main library object.
-*
-* @returns {Object} Same object received as input but sorted.
+vcf.getChrCode=async(that)=>{ // extract chrCode
+    that.chrCode = [that.idxx[0].chrStart]
+    stop=false
+    let j=0
+    let iterate = async function(i=parseInt(that.keyGap/2),step=that.keyGap/2){
+    	j=j+1
+    	step=Math.round(step)
+    	if(stop){
+    		debugger
+    	}
+    	ini = await that.fetchGz(Math.min(i,that.size-1))
+    	let dt = ini.txt.split(/\n/g).filter(x=>!x.match(/^#/)).map(r=>r.split(/\t/g))
+    	if(dt[0][0].length>0){
+    		let firstRow = dt[0]
+			if(dt[1]){
+				if(firstRow.length!=dt[1].length){ // if first and second rows have different numbers of columns
+					firstRow=dt[1]
+				}
+			}
+
+			let lastRow=dt.slice(-2,-1)[0]
+			console.log(j,i,step,[firstRow[0],lastRow[0]],that.chrCode)
+			//debugger
+			if(i<that.idxx.slice(-1)[0].ii.slice(-2,-1)[0]){
+				if(lastRow[0]==that.chrCode.slice(-1)[0]){ // if new end chr same as the last one 
+					step=Math.round(step*(1+5*Math.random()))
+					iterate(i+step,step)
+				}else{
+					//debugger
+					if(firstRow[0]==that.chrCode.slice(-1)[0]){ // if read starts with one chr and ends with the other
+						that.chrCode.push(lastRow[0])
+						if(lastRow[0]!=that.idxx.slice(-1)[0].chrEnd||j<1000){ // if it is not the lars chr
+							iterate(i)
+						}else{
+							return that
+						}					
+					}else{
+						//step=Math.round(-0.5*step)
+						//iterate(i-step,Math.round(that.keyGap/(4+Math.random()))) // take a step back and start again
+						iterate(i-step,Math.round(100+that.keyGap*Math.random()))
+					}
+				}
+			}else{
+				//iterate(i-step,Math.round(that.keyGap/(4+Math.random()))) // out of bounds, take a step back
+				iterate(i-step,Math.round(100+that.keyGap*Math.random()))
+			}
+    	}			
+    }
+    iterate()
+	return that.chrCode
+}
+
+/*
+vcf.idxx=(that,ini)=>{ // index decompressed content
+    console.log('indexed ini:',ini)
+    that.idxx = that.idxx || [{ki:0,chr:0,pos:0}] //{ki:[],chr:[],pos:[]} // indexing (ki) chromossome (chr) and position (pos) in the first full row after decompression key
+    let n=ini.arrBuff.byteLength // length of array buffer slice
+    let maxLine=2000 // maximum length of VCF row
+    ini.idx.forEach((i,k)=>{
+    //let i = ini.idx[0] // do only the first key match per set
+    	let j=1 // first full position
+    	let arr=[] // array of stringified rows after kth key match
+    	if(k==0){
+    		arr = ini.txt.split(/\n/g)
+    	} else if((n-i)>maxLine){
+    		let text_i=pako.inflate(ini.arrBuff.slice(i,i+maxLine),{"to":"string"})
+    		arr = text_i.split(/\n/g)
+    	}
+    	let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
+    	if(dt.length>0){
+    		if(dt[0].length==dt[1].length){j=0} // the first row is complete
+			if(!that.idxx.map(x=>x.ki).includes(i)){ // skip repeats
+				that.idxx.push({ki:i,chr:parseInt(dt[j][0]),pos:parseInt(dt[j][1])})
+			}
+    	}else{
+    		console.log(`empty array at i=${i} with ini=`,ini)
+    	}	
+    	that.idxx=vcf.sortIdxx(that.idxx)
+    }) // add new indes of keys
+    // data only
+    //let arr = ini.txt.split(/\n/g)
+    //let dt=arr.filter(r=>!r.match(/^#/)).map(a=>a.split(/\t/)) // it will be [] in none matches
+	//debugger
+}
 */
+
 vcf.sortIdxx=(idxx)=>{
 	return idxx.sort((a,b)=>(a.ii[0]-b.ii[0]))
 }
 
-/** 
-* Get partial content as array buffer
-* 
-*
-* @param {array} range An array containing the start and end positions of the byte range to be read.
-* @param {string} url Vcf file url.
-*
-* @returns {array} Arraybuffer containing the portion of bytes read from the file.
-*/
+//vcf.getArrayBuffer=async(range=[0,1000],url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
 vcf.getArrayBuffer=async(range=[0,1000],url='test_4X_191.vcf')=>{
     return await (await (fetch(url,{
         headers: {
@@ -342,20 +396,28 @@ vcf.getArrayBuffer=async(range=[0,1000],url='test_4X_191.vcf')=>{
     }))).arrayBuffer()
 }
 
-/* Uncompress and retrieve content from a file portion */
+
 vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz',keyGap=vcf.keyGap)=>{
-   if(typeof(range)=="number"){
+    //let ab = await vcf.getArrayBuffer(range,url)
+    // modulate range
+    if(typeof(range)=="number"){
     	range = [range,range+keyGap]
     }
     if((range[1]-range[0])<keyGap){
     	range = [range[0],range[0]+keyGap]
     }
     
-    const ab = await (await vcf.fetchRange(range,url)).arrayBuffer()
+	// start at the previous inflatable key
+    //let rr = range // floored range
+    //rr[0]=Math.max(0,rr[0]-keyGap/2) // keyGap has to be an even integer
+    //const ab = await (await vcf.fetch(rr,url)).arrayBuffer()
+    
+    // start at next inflatable key
+    const ab = await (await vcf.fetch(range,url)).arrayBuffer()
     const dv = new DataView(ab)
     const it = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // as integers
     const id = vcf.matchKey(it.slice(0, keyGap))
-    
+    //console.log(`id = [${id}]\nit.length = ${it.length}`)
     let res = {
     	txt:pako.inflate(ab.slice(id[0]),{"to":"string"}),
     	arrBuff:ab,
@@ -363,12 +425,24 @@ vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606
     	range:range,
     	url:url
     }
+    /*
+    id.push(it.length)
+    id.slice(0,-1).forEach((idi,i)=>{
+    	res.txt[i]=pako.inflate(ab.slice(id[0]),{"to":"string"})
+    })
+    */
 
     return res
 }
 
-/* Build index for the entire file */
-vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20201026.vcf.gz', size)=>{
+vcf.getTbi=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All_papu.vcf.gz.tbi')=>{
+    const bf = pako.inflate((await (await fetch(url)).arrayBuffer()),{to:'arraybuffer'})
+    const dv = new DataView(bf.buffer)
+    return dv
+    //return [...bf].map(x=>String.fromCharCode(parseInt(x))).join('')
+}
+
+vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20201026.vcf.gz',size)=>{
     // index chunk locations and Chr:pos
     let idx={
         chunks:[],
@@ -404,8 +478,7 @@ vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinv
     return idx
 }
 
-/* Check whether the chunk key matches with a key from the compressed file */
-vcf.matchKey=(arr, key=vcf.gzKey)=>{
+vcf.matchKey=(arr,key=vcf.gzKey)=>{
     let ind=arr.map((x,i)=>i) // the indexes
     key.forEach((k,j)=>{
         ind=ind.filter(i=>arr[i+j]==k)
@@ -413,7 +486,6 @@ vcf.matchKey=(arr, key=vcf.gzKey)=>{
     return ind
 }
 
-/* Compress the index retrieved for the entire file */
 vcf.compressIdx=function(idx,filename){
     // string it
     //let xx = pako.deflate(idx.chunks.concat(idx.chrPos.map(x=>x[0]).concat(idx.chrPos.map(x=>x[1]))))
@@ -424,7 +496,10 @@ vcf.compressIdx=function(idx,filename){
     return xx
 }
 
-/* Obtain file size */
+vcf.readIdx=async function(filename='idx.gz'){ // read compressed idx index
+    //let xx = (await fetch(filename)).
+}
+
 vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
     let response = await fetch(url,{
         method:'HEAD'
@@ -434,7 +509,6 @@ vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00
     return parseInt(contentLength)
 }
 
-/* Open the file in download mode */
 vcf.saveFile=function(x,fileName) { // x is the content of the file
 	// var bb = new Blob([x], {type: 'application/octet-binary'});
 	// see also https://github.com/eligrey/FileSaver.js
@@ -473,6 +547,7 @@ if(typeof(define)!='undefined'){
 if(typeof(pako)=="undefined"){
 	vcf.loadScript('https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js')
 }
+
 
 // testing
 // v = new vcf('https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz')
