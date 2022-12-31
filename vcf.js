@@ -342,7 +342,16 @@ vcf.getArrayBuffer=async(range=[0,1000],url='test_4X_191.vcf')=>{
     }))).arrayBuffer()
 }
 
-/* Uncompress and retrieve content from a file portion */
+/** 
+* Uncompress and retrieve content from a file portion
+* 
+*
+* @param {array|number} range An array containing the start and end positions of the byte range to be read, or a single number indicating the start.
+* @param {string} url Vcf file url.
+* @param {number} keyGap The gap length between keys.
+*
+* @returns {Object} An object containing the following attributes: txt - text of the range just read, arrBuff - bytes read as array buffer, idx - indexes of this range, range - array with the start and end byte indexes, url - vcf file url.
+*/
 vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz',keyGap=vcf.keyGap)=>{
    if(typeof(range)=="number"){
     	range = [range,range+keyGap]
@@ -367,7 +376,15 @@ vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606
     return res
 }
 
-/* Build index for the entire file */
+/** 
+* Build index for the entire file
+* 
+*
+* @param {string} url Vcf file url.
+* @param {number} size Vcf file size
+*
+* @returns {Object} An object containing the following attributes: chunks - array containing the chunk indexes, chrPos - Chromosome Positions found in the chunks.
+*/
 vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20201026.vcf.gz', size)=>{
     // index chunk locations and Chr:pos
     let idx={
@@ -404,7 +421,15 @@ vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinv
     return idx
 }
 
-/* Check whether the chunk key matches with a key from the compressed file */
+/** 
+* Check whether the chunk key matches with a key from the compressed file
+* 
+*
+* @param {array} arr Byte array indexes of the current chunk.
+* @param {array} key A list of sixteen numbers representing the compression indexes.
+*
+* @returns {array} A list of the indexes from the current chunk that matched with the compression indexes.
+*/
 vcf.matchKey=(arr, key=vcf.gzKey)=>{
     let ind=arr.map((x,i)=>i) // the indexes
     key.forEach((k,j)=>{
@@ -413,7 +438,15 @@ vcf.matchKey=(arr, key=vcf.gzKey)=>{
     return ind
 }
 
-/* Compress the index retrieved for the entire file */
+/** 
+* Compress the index retrieved for the entire file
+* 
+*
+* @param {Object} idx An object containing the following attributes: chunks - array containing the chunk indexes, chrPos - Chromosome Positions found in the chunks.
+* @param {string} filename Filename for exportation.
+*
+* @returns {Object} Compressed binary file.
+*/
 vcf.compressIdx=function(idx,filename){
     // string it
     //let xx = pako.deflate(idx.chunks.concat(idx.chrPos.map(x=>x[0]).concat(idx.chrPos.map(x=>x[1]))))
@@ -424,7 +457,14 @@ vcf.compressIdx=function(idx,filename){
     return xx
 }
 
-/* Obtain file size */
+/** 
+* Obtain file size
+* 
+*
+* @param {string} url Vcf file url.
+*
+* @returns {number} Total file size.
+*/
 vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')=>{
     let response = await fetch(url,{
         method:'HEAD'
@@ -434,7 +474,15 @@ vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00
     return parseInt(contentLength)
 }
 
-/* Open the file in download mode */
+/** 
+* Open the file in download mode
+* 
+*
+* @param {Object} x Compressed binary file.
+* @param {string} filename Filename for exportation.
+*
+* @returns {HTMLAnchorElement} HTML anchor (<a />) element with the click event fired.
+*/
 vcf.saveFile=function(x,fileName) { // x is the content of the file
 	// var bb = new Blob([x], {type: 'application/octet-binary'});
 	// see also https://github.com/eligrey/FileSaver.js
@@ -447,6 +495,13 @@ vcf.saveFile=function(x,fileName) { // x is the content of the file
 	return a
 }
 
+/** 
+* Load a certain dependency library from link
+* 
+*
+* @param {string} url Library URL.
+*
+*/
 vcf.loadScript= async function(url){
 	console.log(`${url} loaded`)
     async function asyncScript(url){
