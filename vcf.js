@@ -17,6 +17,7 @@ vcf.chrCode='1-22,X,Y,XY,MT,0'
  * @property {Function} getTail - {@link vcf.getTail}
  * @property {Function} getIndexes - {@link vcf.getIndexes}
  * @property {Function} query - {@link vcf.query}
+ * @property {Function} queryInBatch - {@link vcf.queryInBatch}
  * @property {Function} sortIdxx - {@link vcf.sortIdxx}
  * @property {Function} getArrayBuffer - {@link vcf.getArrayBuffer}
  * @property {Function} fetchGz - {@link vcf.fetchGz}
@@ -44,6 +45,7 @@ vcf.chrCode='1-22,X,Y,XY,MT,0'
  * @attribute {array} idxx Array of objects concerning the chunk contents, each of these containing the following attributes: chrStart - start chromosome, chrEnd - end chromosome, dt - list of the vcf table containing the SNPs information in the range of chromosome and positions, posStart - Start position in the start chromosome, posEnd - End position in the end chromosome, ii - Byte slice indexes.
  * @attribute {Function} indexGz Same as vcf.indexGz
  * @attribute {Function} query Same as vcf.query
+ * @attribute {Function} queryInBatch Same as vcf.queryInBatch
  * @attribute {Function} getArrayBuffer Same as vcf.getArrayBuffer
  * @attribute {Function} fetchGz Same as vcf.fetchGz
  * @attribute {Function} fetchRange Same as vcf.fetchRange
@@ -97,6 +99,9 @@ Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
     }
     this.query=async function(q='1,10485'){
 		return await vcf.query(q,that)
+	}
+    this.queryInBatch=async function(query){
+		return await vcf.queryInBatch(q,that)
 	}
     this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
     	return vcf.getArrayBuffer(range,url)
@@ -262,7 +267,7 @@ vcf.getIndexes=(that,ini)=>{
 * @param {string} [q=1,10485] Search parameter in the format 'chromosome,position'.
 * @param {Object} that Vcf library object.
 *
-* @returns {Object} Search result object, containing the following attributes: hit - array containing the vf table lines with the SNPs found in the chromosome an dposition searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object).
+* @returns {Object} Search result object, containing the following attributes: hit - array containing the vcf table lines with the SNPs found in the chromosome and position searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object).
 * 
 * @example
 * let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
@@ -352,6 +357,49 @@ vcf.query= async function(q='1,10485',that){
 	}
 	that.lastQueryResult = val
 	return val
+}
+
+/** 
+* Query based on a list of positions of chromosomes
+* 
+*
+* @param {array} [query=[["8","73458588"],["MT","11252"],["4","53814975"]] Search parameter in the format of a list of sublists containing chromosome in position 0 and position in position 1.
+* @param {Object} that Vcf library object.
+*
+* @returns {Object} Search result object, containing the following attribute: hit - array containing the vcf table lines with the SNPs found in the chromosome an dposition searched.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* var dat = await fetch(location.href.split('#')[0]+'multiple_query.json')
+* dat = await dat.json()
+* var result = await vcf.queryInBatch(dat['list'], v)
+*/
+vcf.queryInBatch = (query, that) => {
+    var compiled={ 'hit': [] }
+    var filtered = query.filter( p =>{ p.length==2 } )
+    filtered = query.filter( p => that.chrCode.includes(String(p[0]))&!isNaN(parseInt(p[1])) )
+    if(filtered.length > 0){
+        var orderedQuery = []
+        that.chrCode.forEach( k => { 
+            orderedQuery = orderedQuery.concat( filtered.filter( p => String(p[0]) == String(k) ) ) 
+        })
+        
+        var gone = []
+        orderedQuery.forEach( q => {
+            q=`${q[0]},${q[1]}`
+            if( ! gone.includes(q) ){
+                gone.push(q)
+                that.query(q).then( (result) => {
+                    compiled.hit = compiled.hit.concat(result.hit)
+                })
+            }   
+        })
+        that.lastQueryResult = compiled
+    }
+    else{
+        alert('There are no valid entries to query')
+    }
+    return compiled
 }
 
 /** 
