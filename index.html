@@ -77,7 +77,7 @@
                             
                             <div class="row">
                                 <div class="col-12">
-                                    <h3> 1 - Reading a slice of the data <span style="font-size:small; color:green; display: none;" id='infoFile'>(Total: <span id="filesize" style="color:red">...</span>)</span> </h3>
+                                    <h3> 1 - Reading a slice of the data <span style="font-size:small; color:green; display: none;" id='infoFile'>(Filesize: <span id="filesize" style="color:red">...</span>)</span> </h3>
                                     <p> Choose an interval to read, then an object of VCF library will be initialized and will return the corresponding data with the chosen byte range.  </p>
                                     
                                     <form>
@@ -94,7 +94,7 @@
                             
                             <div class="row mt-3">
                                 <div class="col-12">
-                                    <h3> 2 - Filtering chromosomes and positions </h3>
+                                    <h3> 2 - Filtering chromosomes and positions <span style="font-size:small; color:green; display: none;" id='infoTime'>(Query execution time: <span id="runtime" style="color:red">...</span>)</span> </h3>
                                     <p> Choose a specific chromosome and position to search across the vcf file. Our search algorithm uses an strategy to optimize the search, returning the respective results in miliseconds. 
                                     <br />
                                     Examples to try it out: chromosome 7 and position 151040280 (7,151040280), chromosome 10 and position 133421085 (10,133421085), chromosome 17 and position 7675353 (17,7675353).</p>
@@ -182,10 +182,18 @@
                         
                         var chromosome = chrom.value
                         if(chromosome!='0'){
+                            infoTime.style.display="none"
+                            var start = performance.now()
+                            
                             var pos = position.value
                             var q = `${chromosome},${pos}`
                             var result = await v.query(q)
                             filteredSnps_wrapper.style.display='block'
+                            
+                            var end = performance.now()
+                            var diff=((end-start)/1000).toFixed(2)
+                            runtime.innerHTML=  `${diff} seconds`
+                            infoTime.style.display="block"
                             
                             $(document).ready(function() {
                                datatable.fnDestroy()

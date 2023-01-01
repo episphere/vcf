@@ -98,16 +98,6 @@ gendoc.buildTableObjects = () => {
     return table
 }
 
-gendoc.getPropertyLine = (nameProp) => {
-    var counter=1
-    gendoc.lines.forEach( l => {
-        if( l.indexOf(nameProp)==0 ){
-            return counter
-        }
-        counter+=1
-    })
-}
-
 gendoc.getProperties = () => {
     var props=[]
     var targets=[]
@@ -244,7 +234,6 @@ gendoc.getDetails = (remote_host) => {
         
         if( init && (l.indexOf('*/') != -1) ){
             initExample=false
-            console.log(gendoc.lines[i+1].split('=')[0].replace(' ',''))
             var part = gendoc.lines[i+1].split('=')[0].replace(' ','')
             var line = gendoc.lines.indexOf(gendoc.lines.filter(x=> x.indexOf(part)==0)[0])+1
             var linkCode = remote_host+'#L'+line
