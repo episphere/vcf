@@ -36,6 +36,7 @@ vcf.chrCode='1-22,X,Y,XY,MT,0'
  * @attribute {number} keyGap The gap length between keys.
  * @attribute {string} chrCode Chromosomes that will be used (Ex.: '2' or '1-22' or '1-22,X,Y,XY,MT' or 'X,Y').
  * @attribute {number} size Vcf file total size.
+ * @attribute {Object} lastQueryResult Search result object, containing the following attributes: hit - array containing the vf table lines with the SNPs found in the chromosome an dposition searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object).
  * @attribute {array} gzKey Vcf file compression chunk indexes.
  * @attribute {array} meta Metadata lines.
  * @attribute {array} cols Table columns identifying the data items.
@@ -46,6 +47,7 @@ vcf.chrCode='1-22,X,Y,XY,MT,0'
  * @attribute {Function} getArrayBuffer Same as vcf.getArrayBuffer
  * @attribute {Function} fetchGz Same as vcf.fetchGz
  * @attribute {Function} fetchRange Same as vcf.fetchRange
+ * @attribute {Function} saveQueryResult Save the results of the last query into a tabulated file using the function vcf.saveFile
  */
 
 /** 
@@ -70,6 +72,7 @@ Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
     this.url=url
     this.date=new Date()
     this.keyGap=keyGap||vcf.keyGap
+    this.lastQueryResult = null
     
     this.chrCode=chrCode
 	if(typeof(chrCode)=="string"){
@@ -111,7 +114,19 @@ Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         }
         let res = await vcf.fetchRange(range,url=this.url)
         return res
-    };
+    }
+    this.saveQueryResult= ()=>{
+        if(this.lastQueryResult!=null && this.lastQueryResult!=undefined){
+            if(this.lastQueryResult.hit.length != 0){
+                var result = this.cols.join('\t')+'\n'
+                this.lastQueryResult.hit.forEach( x => {
+                    result += x.join('\t')+'\n'
+                })
+                return vcf.saveFile(result, 'queryResult.tsv')
+            }
+        }
+        alert('There are no query results to export.')
+    }
 
     (async function(){ 
         /* Initializes object with the computed attributes*/
@@ -247,7 +262,7 @@ vcf.getIndexes=(that,ini)=>{
 * @param {string} [q=1,10485] Search parameter in the format 'chromosome,position'.
 * @param {Object} that Vcf library object.
 *
-* @returns {Object} Search result obkect, containing the following attributes: hit - array containing the vf table lines with the SNPs found in the chromosome an dposition searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object).
+* @returns {Object} Search result object, containing the following attributes: hit - array containing the vf table lines with the SNPs found in the chromosome an dposition searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object).
 * 
 * @example
 * let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
@@ -335,6 +350,7 @@ vcf.query= async function(q='1,10485',that){
 		}
 		i++
 	}
+	that.lastQueryResult = val
 	return val
 }
 

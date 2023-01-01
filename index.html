@@ -105,7 +105,8 @@
                                             <select class="form-control mr-3 fields" style=" width: 200px !important;" id="chrom" value=0 > <option value='0'>Select a chromosome </option> </select>
                                             <div  class="mr-3 fields" style="text-align: right;" > Position: </div>
                                             <input type="number" class="form-control mr-3 fields" style=" width: 150px !important;" id="position" min=1000 size=10 value=1000 />
-                                            <button type="button" class="btn btn-primary" id="filter" onclick="filterFun()" disabled=true>Filter</button>
+                                            <button type="button" class="btn btn-primary mr-3" id="filter" onclick="filterFun()" disabled=true>Filter</button>
+                                            <button type="button" class="btn btn-primary" id="exporting" onclick="exportFun()" disabled=true>Export</button>
                                         </div>    
                                     </form>
                                     
@@ -148,7 +149,7 @@
                         
                         if( url.indexOf('.gz')!=-1 ){
                             let start=range[0]
-                            console.log(range)
+                            
                             let res = await v.fetchGz(range)
                             rangeTextArea.value= (res.txt)
                         }else{
@@ -164,7 +165,7 @@
                         
                         setTimeout(function(){
                             v.cols.forEach( x => { columns.push( {'title': x} ) } )
-                            console.log(columns)
+                            
                             $(document).ready(function() {
                                 datatable = $('#filteredSnps').dataTable( {
                                     "data": [],
@@ -179,6 +180,7 @@
                     filterFun = async _=> {
                         filter.innerHTML="Filtering ..."
                         filter.disabled=true
+                        exporting.disabled=true
                         
                         var chromosome = chrom.value
                         if(chromosome!='0'){
@@ -209,7 +211,11 @@
 
                         filter.innerHTML="Filter"
                         filter.disabled=false
-                        
+                        exporting.disabled=false
+                    }
+                    
+                    exportFun = () => {
+                        v.saveQueryResult()
                     }
                     
                     gendoc.getLines(location.href.split('#')[0]+'vcf.js').then( (value) => {
