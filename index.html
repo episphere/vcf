@@ -12,9 +12,12 @@
         
         <link rel="icon" href="favicon.ico" type="image/x-icon"/>
         <script src="vcf.js"></script>
+        <link rel="stylesheet" href="vcf.css">
+        
+        <script src="gendoc.js"></script>
+        <link rel="stylesheet" href="gendoc.css">
         
         <link href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css" rel="stylesheet"  crossorigin="anonymous">
-        <link rel="stylesheet" href="vcf.css">
         
     </head>
     
@@ -200,6 +203,10 @@
                         filter.disabled=false
                         
                     }
+                    
+                    gendoc.getLines(location.href.split('#')[0]+'vcf.js').then( (value) => {
+                        gendoc.buildDocumentation('documentation-content','https://github.com/episphere/vcf/blob/main/vcf.js')
+                    })
                 </script>
             </div>
         </div>
