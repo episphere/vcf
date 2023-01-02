@@ -279,6 +279,13 @@
                         v.saveQueryResult()
                     }
                     
+                    /*
+                        regular expressions to get the list of query from idxx
+                        rs(.*)\n - \n
+                        (\d*)\n: \n(.*)\[ -> \n[
+                        , '\n\n -> ],\n
+                    */
+                    
                     gendoc.getLines(location.href.split('#')[0]+'vcf.js').then( (value) => {
                         gendoc.buildDocumentation('documentation-content','https://github.com/episphere/vcf/blob/main/vcf.js')
                     })
