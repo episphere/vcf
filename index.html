@@ -95,9 +95,11 @@
                             <div class="row mt-3">
                                 <div class="col-12">
                                     <h3> 2 - Filtering chromosomes and positions <span style="font-size:small; color:green; display: none;" id='infoTime'>(Query execution time: <span id="runtime" style="color:red">...</span>)</span> </h3>
-                                    <p> Choose a specific chromosome and position to search across the vcf file. Our search algorithm uses an strategy to optimize the search, returning the respective results in miliseconds. 
+                                    <p> 
+                                    Choose a specific chromosome and position to search across the vcf file. Our search algorithm uses an strategy to optimize the search, returning the respective results in miliseconds. 
                                     <br />
-                                    Examples to try it out: chromosome 7 and position 151040280 (7,151040280), chromosome 10 and position 133421085 (10,133421085), chromosome 17 and position 7675353 (17,7675353).</p>
+                                    Examples to try it out: chromosome 7 and position 151040280 (7,151040280), chromosome 10 and position 133421085 (10,133421085), chromosome 17 and position 7675353 (17,7675353).
+                                    </p>
                                     
                                     <form>
                                         <div class="form-group col-8">
@@ -110,9 +112,35 @@
                                         </div>    
                                     </form>
                                     
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h3> 3 - Filtering a list of chromosomes and positions <span style="font-size:small; color:green; display: none;" id='infoTimeb'>(Query execution time: <span id="runtimeb" style="color:red">...</span>)</span> </h3>
+                                    <p> 
+                                    Given a list of sublists containing a chromosome and a position ([["8","73458588",["MT","11252"],["4","53814975"]]), it will validate the list according to the loaded chromosomes in the file and return the SNPs found for the specified query. 
+                                    <br />
+                                    In this example, it will read <a href='multiple_query.json' >this file</a> and use 445 pairs chromosome-position in the query.
+                                    </p>
+                                    
+                                    <form>
+                                        <div class="form-group col-6">
+                                            <button type="button" class="btn btn-primary mr-3" id="filterb" onclick="filterBatchFun()" disabled=true>Filter</button>
+                                            <button type="button" class="btn btn-primary" id="exportingb" onclick="exportFun()" disabled=true>Export</button>
+                                        </div>    
+                                    </form>
+                                    
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
                                     <table id="filteredSnps"> </table>
                                 </div>
                             </div>
+                            
+                            
                         </section>
                     </div>
                     
@@ -173,7 +201,9 @@
                                 } );     
                                 filteredSnps_wrapper.style.display='none'
                             } );
+                            
                             filter.disabled=false
+                            filterb.disabled=false
                         }, 3000)
                     }
                     
@@ -212,6 +242,37 @@
                         filter.innerHTML="Filter"
                         filter.disabled=false
                         exporting.disabled=false
+                    }
+                    
+                    filterBatchFun = async () => {
+                        filterb.innerHTML="Filtering ..."
+                        filterb.disabled=true
+                        exporting.disabled=true
+                        
+                        infoTimeb.style.display="none"
+                        var start = performance.now()
+                        
+                        var dat = await fetch(location.href.split('#')[0]+'multiple_query.json')
+                        dat = await dat.json()
+                        var result = await v.queryInBatch( dat['list'] )    
+                        filteredSnps_wrapper.style.display='block'
+                        
+                        var end = performance.now()
+                        var diff=((end-start)/1000).toFixed(2)
+                        runtimeb.innerHTML=  `${diff} seconds`
+                        infoTimeb.style.display="block"
+                        
+                        $(document).ready(function() {
+                           datatable.fnDestroy()
+                           datatable = $('#filteredSnps').dataTable( {
+                                "data": result.hit,
+                                "columns": columns
+                            } );     
+                        } );
+                        
+                        filterb.innerHTML="Filter"
+                        filterb.disabled=false
+                        exportingb.disabled=false
                     }
                     
                     exportFun = () => {

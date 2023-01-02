@@ -98,10 +98,10 @@ Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         return that.indexGz
     }
     this.query=async function(q='1,10485'){
-		return await vcf.query(q,that)
+		return await vcf.query(q, that)
 	}
     this.queryInBatch=async function(query){
-		return await vcf.queryInBatch(q,that)
+		return await vcf.queryInBatch(query, that)
 	}
     this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
     	return vcf.getArrayBuffer(range,url)
@@ -281,7 +281,7 @@ vcf.query= async function(q='1,10485',that){
 	}
 	
 	// start iterative querying
-	console.log(`range search for (${q})`)
+	//console.log(`range search for (${q})`)
 	// 1 -  find bounds
 	let val={range:undefined} // matching results will be pushed here
 	let j=0  // counter
@@ -300,7 +300,7 @@ vcf.query= async function(q='1,10485',that){
 	
 	previousRange='0:0-0:0'
 	
-	console.log(`Query seed: ${i}`)
+	//console.log(`Query seed: ${i}`)
 	while(i<that.idxx.length){
 		//val=[] // reset every try
 		j=j+1
@@ -315,7 +315,8 @@ vcf.query= async function(q='1,10485',that){
 		let posEnd = parseInt(that.idxx[i].dt.filter(r=>r[0]==v.chrCode[chrStart]).slice(-2,-1)[0][1]) // last position for this chromossome
 		console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
 		
-		newRange=`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
+		newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
+		console.log(newRange == previousRange)
 		if(newRange != previousRange){
 		    previousRange = newRange
 		    if (chrStart<q[0]){ // undershot chr target
@@ -350,8 +351,7 @@ vcf.query= async function(q='1,10485',that){
 		else{
 		    val.range=that.idxx[i]
 			val.hit=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
-			i=0
-		    break
+			break
 		}
 		i++
 	}
@@ -374,26 +374,45 @@ vcf.query= async function(q='1,10485',that){
 * dat = await dat.json()
 * var result = await vcf.queryInBatch(dat['list'], v)
 */
-vcf.queryInBatch = (query, that) => {
+vcf.queryInBatch = async (query, that) => {
     var compiled={ 'hit': [] }
     var filtered = query.filter( p =>{ p.length==2 } )
     filtered = query.filter( p => that.chrCode.includes(String(p[0]))&!isNaN(parseInt(p[1])) )
+    console.log('first filter: '+filtered.length)
     if(filtered.length > 0){
         var orderedQuery = []
         that.chrCode.forEach( k => { 
             orderedQuery = orderedQuery.concat( filtered.filter( p => String(p[0]) == String(k) ) ) 
         })
+        console.log('2nd filter: '+orderedQuery.length)
         
+        // Removing query repetitions and formatting
         var gone = []
-        orderedQuery.forEach( q => {
+        orderedQuery.forEach( async q => {
             q=`${q[0]},${q[1]}`
             if( ! gone.includes(q) ){
                 gone.push(q)
-                that.query(q).then( (result) => {
+                
+                /*var result = await that.query(q)
+                var checked = result.hit.filter( x => x.length==that.cols.length )
+                
+                */
+                
+                /*that.query(q).then( (result) => {
                     compiled.hit = compiled.hit.concat(result.hit)
-                })
+                })*/
             }   
         })
+        console.log('3rd filter: '+gone.length)
+        
+        var checklist = await Promise.all( gone.map( async (q) => {
+            var result = await that.query(q)
+            var checked = result.hit.filter( x => x.length==that.cols.length )
+            compiled.hit = compiled.hit.concat( checked )
+            return q
+        }))
+        console.log(checklist)
+        
         that.lastQueryResult = compiled
     }
     else{
