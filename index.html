@@ -196,7 +196,7 @@
                         infoFile.style.display="block"
                         
                         setTimeout(function(){
-                            v.cols.forEach( x => { columns.push( {'title': x} ) } )
+                            v.cols.slice(0,5).forEach( x => { columns.push( {'title': x} ) } )
                             
                             $(document).ready(function() {
                                 datatable = $('#filteredSnps').dataTable( {
@@ -225,6 +225,12 @@
                             var pos = position.value
                             var q = `${chromosome},${pos}`
                             var result = await v.query(q)
+                            
+                            var cutted_info=[]
+                            result.hit.forEach( x => {
+                                cutted_info.push(x.slice(0,5))
+                            })
+                            
                             filteredSnps_wrapper.style.display='block'
                             
                             var end = performance.now()
@@ -235,7 +241,7 @@
                             $(document).ready(function() {
                                datatable.fnDestroy()
                                datatable = $('#filteredSnps').dataTable( {
-                                    "data": result.hit,
+                                    "data": cutted_info,
                                     "columns": columns
                                 } );     
                             } );
@@ -261,7 +267,13 @@
                         
                         var dat = await fetch(location.href.split('#')[0]+'multiple_query.json')
                         dat = await dat.json()
-                        var result = await v.queryInBatch( dat['list'] )    
+                        var result = await v.queryInBatch( dat['list'] ) 
+                        
+                        var cutted_info=[]
+                        result.hit.forEach( x => {
+                            cutted_info.push(x.slice(0,5))
+                        })
+                           
                         filteredSnps_wrapper.style.display='block'
                         
                         var end = performance.now()
@@ -272,7 +284,7 @@
                         $(document).ready(function() {
                            datatable.fnDestroy()
                            datatable = $('#filteredSnps').dataTable( {
-                                "data": result.hit,
+                                "data": cutted_info,
                                 "columns": columns
                             } );     
                         } );
