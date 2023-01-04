@@ -1,5 +1,5 @@
 
-gendoc={ 'targets': [], 'properties': [], 'objects': [], 'propertyDetails': []}
+gendoc={ 'lines': [], 'targets': [], 'properties': [], 'objects': [], 'propertyDetails': []}
 
 gendoc.getLines= async (url) =>{
     gendoc.url = url
@@ -395,27 +395,29 @@ gendoc.buildPropertyDetail = (remote_host) => {
     return table
 }
 
-gendoc.buildDocumentation = (container_id, remote_host) => {
-    var objects = gendoc.buildTableObjects()
-    var methods = gendoc.buildTableProperties()
-    var details = gendoc.buildPropertyDetail(remote_host)
-    
-    var html=`
-        <h2>Documentation</h2>
-    
-        <div class="col-12" >
-            <h3> Objects </h3>
-            ${objects}
-            
-            <h3> Properties </h3>
-            ${methods}
-            
-            <h3> Properties Details </h3>
-            ${details}
-        </div>
-    `
-    
-    document.getElementById(container_id).innerHTML=html
+gendoc.buildDocumentation = (jsfile, container_id, remote_host) => {
+    gendoc.getLines(jsfile).then( (value) => {
+        var objects = gendoc.buildTableObjects()
+        var methods = gendoc.buildTableProperties()
+        var details = gendoc.buildPropertyDetail(remote_host)
+        
+        var html=`
+            <h2>Documentation</h2>
+        
+            <div class="col-12" >
+                <h3> Objects </h3>
+                ${objects}
+                
+                <h3> Properties </h3>
+                ${methods}
+                
+                <h3> Properties Details </h3>
+                ${details}
+            </div>
+        `
+        
+        document.getElementById(container_id).innerHTML=html
+    })
 }
 
 

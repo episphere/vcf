@@ -306,9 +306,8 @@
                         , '\n\n -> ],\n
                     */
                     
-                    gendoc.getLines(location.href.split('#')[0]+'vcf.js').then( (value) => {
-                        gendoc.buildDocumentation('documentation-content','https://github.com/episphere/vcf/blob/main/vcf.js')
-                    })
+                    gendoc.buildDocumentation( location.href.split('#')[0]+'vcf.js', 'documentation-content', 'https://github.com/episphere/vcf/blob/main/vcf.js')
+                    
                 </script>
             </div>
         </div>
