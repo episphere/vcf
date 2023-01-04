@@ -119,7 +119,7 @@
                                 <div class="col-12">
                                     <h3> 3 - Filtering a list of chromosomes and positions <span style="font-size:small; color:green; display: none;" id='infoTimeb'>(Query execution time: <span id="runtimeb" style="color:red">...</span>)</span> </h3>
                                     <p> 
-                                    Given a list of sublists containing a chromosome and a position ([["8","73458588",["MT","11252"],["4","53814975"]]), it will validate the list according to the loaded chromosomes in the file and return the SNPs found for the specified query. 
+                                    Given a list of sublists containing a chromosome and a position ([["8","73458588"],["MT","11252"],["4","53814975"]]), it will validate the list according to the loaded chromosomes in the file and return the SNPs found for the specified query. 
                                     <br />
                                     In this example, it will read <a href='multiple_query.json' >this file</a> and use 445 pairs chromosome-position in the query.
                                     </p>
@@ -210,6 +210,7 @@
                     filterFun = async _=> {
                         filter.innerHTML="Filtering ..."
                         filter.disabled=true
+                        filterb.disabled=true
                         exporting.disabled=true
                         
                         var chromosome = chrom.value
@@ -241,12 +242,14 @@
 
                         filter.innerHTML="Filter"
                         filter.disabled=false
+                        filterb.disabled=false
                         exporting.disabled=false
                     }
                     
                     filterBatchFun = async () => {
                         filterb.innerHTML="Filtering ..."
                         filterb.disabled=true
+                        filter.disabled=true
                         exporting.disabled=true
                         
                         infoTimeb.style.display="none"
@@ -272,6 +275,7 @@
                         
                         filterb.innerHTML="Filter"
                         filterb.disabled=false
+                        filter.disabled=false
                         exportingb.disabled=false
                     }
                     
