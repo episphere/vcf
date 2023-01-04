@@ -405,14 +405,36 @@ vcf.queryInBatch = async (query, that) => {
         })
         console.log('3rd filter: '+gone.length)
         
+        var total = gone.length
+        var counter=0
+        
+        if(document.getElementById('progress')!=null){
+            $('.progress').show()
+            $('#progress').attr('aria-valuenow', counter)
+            $('#progress').attr('aria-valuemax', total)
+        }
+        
         var checklist = await Promise.all( gone.map( async (q) => {
             var result = await that.query(q)
             var checked = result.hit.filter( x => x.length==that.cols.length )
             compiled.hit = compiled.hit.concat( checked )
+    
+            counter+=1
+            
+            if(document.getElementById('progress')!=null){
+                $('#progress').attr('aria-valuenow', counter)
+                var perc=((counter*100)/total).toFixed(2)
+                $('#progress').html( perc+'% finished' )
+                $('#progress').css('width', perc+'%')
+            }
+            
             return q
         }))
-        console.log(checklist)
         
+        if(document.getElementById('progress')!=null){
+            $('.progress').hide()
+        }
+            
         that.lastQueryResult = compiled
     }
     else{
