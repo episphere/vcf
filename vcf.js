@@ -25,6 +25,7 @@ vcf.chrCode='1-22,X,Y,XY,MT,0'
  * @property {Function} compressIdx - {@link vcf.compressIdx}
  * @property {Function} fileSize - {@link vcf.fileSize}
  * @property {Function} saveFile - {@link vcf.saveFile}
+ * @property {Function} saveQueryResult - {@link vcf.saveQueryResult}
  * @property {Function} loadScript - {@link vcf.loadScript}
  */
  
@@ -52,67 +53,49 @@ vcf.chrCode='1-22,X,Y,XY,MT,0'
  * @attribute {Function} saveQueryResult Save the results of the last query into a tabulated file using the function vcf.saveFile
  */
 
-/** 
-* Initializes main library object.
-*
-* @param {string} [url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz] The vcf file url.
-* @param {number} [keyGap=19999] The gap length between keys.
-* @param {string} [chrCode=1-22,X,Y,XY,MT,0] Chromosomes that will be used (Ex.: '2' or '1-22' or '1-22,X,Y,XY,MT' or 'X,Y').
-*
-* @returns {Object} Vcf library object.
-* 
-* @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
-* let v = await new Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', null, '1-22')
-* let v = await new Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', 19999)
-* let v = await new Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', 19999, '1-5')
-*/
-Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', keyGap=vcf.keyGap, chrCode=vcf.chrCode){
-    //alternative url https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz'){
-    
-    /* Initializes object with the direct attributes*/
-    this.url=url
-    this.date=new Date()
-    this.keyGap=keyGap||vcf.keyGap
-    this.lastQueryResult = null
-    
-    this.chrCode=chrCode
-	if(typeof(chrCode)=="string"){
-		if(chrCode.match(/\w+-\w+/)){
-			let range = chrCode.match(/\w+-\w+/)[0].split('-').map(x=>parseInt(x))
-			let rangeTxt=`${range[0]}`
-			for (var i = range[0]+1;i<=range[1];i++){
-				rangeTxt+=`,${i}`
-			}
-			this.chrCode=chrCode.replace(/\w+-\w+/,rangeTxt)
-			//debugger
-		}
-		this.chrCode=this.chrCode.split(',')
-	}
-    
-    let that=this;
-    
-    /* Initialize functions of the library in the object */
-    this.indexGz=async(url=this.url)=>{
-        that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
-        return that.indexGz
+class VcfObject {
+    constructor(url, keyGap, chrCode){
+        this.url=url.replace('http://', 'https://')
+        
+        this.date=new Date()
+        this.keyGap=keyGap||vcf.keyGap
+        this.lastQueryResult = null
+        
+        this.chrCode=chrCode
+        if(typeof(chrCode)=="string"){
+		    if(chrCode.match(/\w+-\w+/)){
+			    let range = chrCode.match(/\w+-\w+/)[0].split('-').map(x=>parseInt(x))
+			    let rangeTxt=`${range[0]}`
+			    for (var i = range[0]+1;i<=range[1];i++){
+				    rangeTxt+=`,${i}`
+			    }
+			    this.chrCode=chrCode.replace(/\w+-\w+/,rangeTxt)
+			    //debugger
+		    }
+		    this.chrCode=this.chrCode.split(',')
+	    }
     }
-    this.query=async function(q='1,10485'){
-		return await vcf.query(q, that)
+    
+    async indexGz (url=this.url) {
+        this.indexGz=await vcf.indexGz(url,size=await this.size) // note how the indexGz function is replaced by the literal result
+        return this.indexGz
+    }
+    async query(q='1,10485'){
+		return await vcf.query(q, this)
 	}
-    this.queryInBatch=async function(query){
-		return await vcf.queryInBatch(query, that)
+    async queryInBatch(query){
+		return await vcf.queryInBatch(query, this)
 	}
-    this.getArrayBuffer=async(range=[0,1000],url=this.url)=>{
+    async getArrayBuffer(range=[0,1000],url=this.url){
     	return vcf.getArrayBuffer(range,url)
     }
-    this.fetchGz = async(range=[0,1000],url=this.url)=>{
+    async fetchGz(range=[0,1000],url=this.url) {
     	let res = await vcf.fetchGz(range,url)
     	vcf.getIndexes(this,res)
     	//debugger
     	return res
     }
-    this.fetchRange=async(range=[0,1000])=>{
+    async fetchRange(range=[0,1000]) {
         // check or retrieve header
         if(!this.meta){
         	await vcf.getMetadata(this)
@@ -120,7 +103,7 @@ Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         let res = await vcf.fetchRange(range,url=this.url)
         return res
     }
-    this.saveQueryResult= ()=>{
+    async saveQueryResult(){
         if(this.lastQueryResult!=null && this.lastQueryResult!=undefined){
             if(this.lastQueryResult.hit.length != 0){
                 var result = this.cols.join('\t')+'\n'
@@ -132,9 +115,134 @@ Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         }
         alert('There are no query results to export.')
     }
+    
+    async handleKey(){
+        this.key=await vcf.getArrayBuffer([0,15], this.url)
+    	const dv = new DataView(this.key)
+        vcf.gzKey = [...Array(dv.byteLength)].map((x,i)=>dv.getUint8(i)) // pick key from first 16 integers
+        this.gzKey = vcf.gzKey
+    }
+    
+    async initialization() {
+        var url = this.url
+        let that = this
+        
+        /*
+        vcf.fileSize(url).then( (value) => {
+            this.size = value
+            that.handleKey().then( (value) => {
+                vcf.getMetadata(that).then( async (value) => {
+                    await vcf.getTail(that)    
+                })
+            })
+    	})
+    	*/
+    	
+    	that.size=await vcf.fileSize(url)
+    	console.log('Size: '+that.size)
+        await that.handleKey()
+        console.log('Key '+that.gzKey)
+        await vcf.getMetadata(this) 
+        console.log('Columns '+that.cols)
+        await vcf.getTail(this)
+        
+        
+    }
+}
 
+/** 
+* Initializes main library object.
+*
+* @param {string} [url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz] The vcf file url.
+* @param {number} [keyGap=19999] The gap length between keys.
+* @param {string} [chrCode=1-22,X,Y,XY,MT,0] Chromosomes that will be used (Ex.: '2' or '1-22' or '1-22,X,Y,XY,MT' or 'X,Y').
+*
+* @returns {Object} Vcf library object.
+* 
+* @example
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', null, '1-22')
+* let v = await Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', 19999)
+* let v = await Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', 19999, '1-5')
+*/
+Vcf = async function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', keyGap=vcf.keyGap, chrCode=vcf.chrCode){
+    //alternative url https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz'){
+    
+    /* Initializes object with the direct attributes*/
+    let that = new VcfObject(url, keyGap, chrCode)
+    /*
+    that.url=url
+    that.date=new Date()
+    that.keyGap=keyGap||vcf.keyGap
+    that.lastQueryResult = null
+    
+    that.chrCode=chrCode
+	if(typeof(chrCode)=="string"){
+		if(chrCode.match(/\w+-\w+/)){
+			let range = chrCode.match(/\w+-\w+/)[0].split('-').map(x=>parseInt(x))
+			let rangeTxt=`${range[0]}`
+			for (var i = range[0]+1;i<=range[1];i++){
+				rangeTxt+=`,${i}`
+			}
+			that.chrCode=chrCode.replace(/\w+-\w+/,rangeTxt)
+			//debugger
+		}
+		that.chrCode=that.chrCode.split(',')
+	}
+    */
+    
+    
+    /* Initialize functions of the library in the object */
+    
+    /*
+    that.indexGz=async(url=that.url)=>{
+        that.indexGz=await vcf.indexGz(url,size=await that.size) // note how the indexGz function is replaced by the literal result
+        return that.indexGz
+    }
+    that.query=async function(q='1,10485'){
+		return await vcf.query(q, that)
+	}
+    that.queryInBatch=async function(query){
+		return await vcf.queryInBatch(query, that)
+	}
+    that.getArrayBuffer=async(range=[0,1000],url=that.url)=>{
+    	return vcf.getArrayBuffer(range,url)
+    }
+    that.fetchGz = async(range=[0,1000],url=that.url)=>{
+    	let res = await vcf.fetchGz(range,url)
+    	vcf.getIndexes(that,res)
+    	//debugger
+    	return res
+    }
+    that.fetchRange=async(range=[0,1000])=>{
+        // check or retrieve header
+        if(!that.meta){
+        	await vcf.getMetadata(that)
+        }
+        let res = await vcf.fetchRange(range,url=that.url)
+        return res
+    }
+    that.saveQueryResult= ()=>{
+        if(that.lastQueryResult!=null && that.lastQueryResult!=undefined){
+            if(that.lastQueryResult.hit.length != 0){
+                var result = that.cols.join('\t')+'\n'
+                that.lastQueryResult.hit.forEach( x => {
+                    result += x.join('\t')+'\n'
+                })
+                return vcf.saveFile(result, 'queryResult.tsv')
+            }
+        }
+        alert('There are no query results to export.')
+    }
+    */
+    
+    /* Initializes object with the computed attributes*/
+    await that.initialization()
+    
+    return that 
+    
+    /*
     (async function(){ 
-        /* Initializes object with the computed attributes*/
         
     	that.size=await vcf.fileSize(url);
     	
@@ -146,7 +254,7 @@ Vcf = function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_2
         await vcf.getMetadata(that) 
         await vcf.getTail(that)
     })(); 
-    
+    */
 }
 
 /** 
@@ -189,7 +297,7 @@ vcf.getMetadata= async that=>{ // extract metadata
 	let arr = ini.txt.split(/\n/g)
     that.meta=arr.filter(r=>r.match(/^##/))
     that.cols=arr[that.meta.length].slice(1).split(/\t/) // column names
-    console.log(`Columns: ${that.cols}`)
+    //console.log(`Columns: ${that.cols}`)
     let vals = arr[that.meta.length+1].split(/\t/g)
     vcf.getIndexes(that,ini)
     return that.meta
@@ -283,7 +391,7 @@ vcf.query= async function(q='1,10485',that){
 	// start iterative querying
 	//console.log(`range search for (${q})`)
 	// 1 -  find bounds
-	let val={range:undefined} // matching results will be pushed here
+	let val={hit: [], range: undefined} // matching results will be pushed here
 	let j=0  // counter
 	// Make sure to start i at the range that precedes the query
 	
@@ -297,14 +405,16 @@ vcf.query= async function(q='1,10485',that){
 			break
 		}
 	}
+	console.log(`Seed ${i}: start - ${that.idxx[i].chrStart}; end - ${that.idxx[i].chrEnd}`)
 	
 	previousRange='0:0-0:0'
 	
+	var searchedRanges = []
 	//console.log(`Query seed: ${i}`)
 	while(i<that.idxx.length){
 		//val=[] // reset every try
 		j=j+1
-		if(j>100){
+		if(j>50){
 			console.log(`${j} max iterations limit reached`)
 			break
 		}
@@ -312,8 +422,8 @@ vcf.query= async function(q='1,10485',that){
 		let posStart = that.idxx[i].posStart
 		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
 		//let posEnd = that.idxx[i].posEnd
-		let posEnd = parseInt(that.idxx[i].dt.filter(r=>r[0]==v.chrCode[chrStart]).slice(-2,-1)[0][1]) // last position for this chromossome
-		console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
+		let posEnd = parseInt(that.idxx[i].dt.filter(r=>r[0]==that.chrCode[chrStart]).slice(-2,-1)[0][1]) // last position for this chromossome
+		//console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
 		
 		newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
 		console.log(newRange == previousRange)
@@ -350,6 +460,7 @@ vcf.query= async function(q='1,10485',that){
 		}
 		else{
 		    val.range=that.idxx[i]
+		    val.range.dt = val.range.dt.filter( x => x.length==that.cols.length )
 			val.hit=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
 			break
 		}
@@ -375,7 +486,7 @@ vcf.query= async function(q='1,10485',that){
 * var result = await vcf.queryInBatch(dat['list'], v)
 */
 vcf.queryInBatch = async (query, that) => {
-    var compiled={ 'hit': [] }
+    var compiled={ 'hit': [], 'range': { 'dt': [] } }
     var filtered = query.filter( p =>{ p.length==2 } )
     filtered = query.filter( p => that.chrCode.includes(String(p[0]))&!isNaN(parseInt(p[1])) )
     console.log('first filter: '+filtered.length)
@@ -409,30 +520,32 @@ vcf.queryInBatch = async (query, that) => {
         var counter=0
         
         if(document.getElementById('progress')!=null){
-            $('.progress').show()
-            $('#progress').attr('aria-valuenow', counter)
-            $('#progress').attr('aria-valuemax', total)
+            document.querySelector('.progress').style.display='block'
+            document.getElementById('progress').setAttribute('aria-valuenow', counter)
+            document.getElementById('progress').setAttribute('aria-valuemax', total)
         }
         
         var checklist = await Promise.all( gone.map( async (q) => {
             var result = await that.query(q)
             var checked = result.hit.filter( x => x.length==that.cols.length )
             compiled.hit = compiled.hit.concat( checked )
-    
+            if(result.range!=undefined){
+                compiled.range.dt = compiled.range.dt.concat( result.range.dt.filter( x => x.length==that.cols.length ) )
+            }
             counter+=1
             
             if(document.getElementById('progress')!=null){
-                $('#progress').attr('aria-valuenow', counter)
+                document.getElementById('progress').setAttribute('aria-valuenow', counter)
                 var perc=((counter*100)/total).toFixed(2)
-                $('#progress').html( perc+'% finished' )
-                $('#progress').css('width', perc+'%')
+                document.getElementById('progress').innerHTML=perc+'% finished'
+                document.getElementById('progress').style.width=perc+'%'
             }
             
             return q
         }))
         
         if(document.getElementById('progress')!=null){
-            $('.progress').hide()
+            document.querySelector('.progress').style.display='none'
         }
             
         that.lastQueryResult = compiled
@@ -631,6 +744,33 @@ vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00
     const reader = response.body.getReader();
     const contentLength = response.headers.get('Content-Length');
     return parseInt(contentLength)
+}
+
+/** 
+* Save query result
+* 
+*
+* @param {number} that Vcf library object
+*
+* @returns {HTMLAnchorElement} HTML anchor (<a />) element with the click event fired.
+* 
+* @example
+* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* v.query('7,151040280')
+* var tag = await vcf.saveQueryResult(v)
+* tag = v.saveQueryResult()
+*/
+vcf.saveQueryResult= (that)=>{
+    if(that.lastQueryResult!=null && that.lastQueryResult!=undefined){
+        if(that.lastQueryResult.hit.length != 0){
+            var result = that.cols.join('\t')+'\n'
+            that.lastQueryResult.hit.forEach( x => {
+                result += x.join('\t')+'\n'
+            })
+            return vcf.saveFile(result, 'queryResult.tsv')
+        }
+    }
+    alert('There are no query results to export.')
 }
 
 /** 

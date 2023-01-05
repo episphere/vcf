@@ -33,6 +33,12 @@ code {
     font-style:italic;
 }
 
+table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
 a:hover {
     background-color:yellow;
     color:red
