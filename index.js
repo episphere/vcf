@@ -310,6 +310,9 @@ var v = null
                             flagQuery = flagQuery && flag
                         }
                         
+                        infoTime.style.display="none"
+                        infoTimeb.style.display="none"
+                        
                         if(flagValidation){
                             var el = document.querySelector('#home-tab')
                             var tab = new bootstrap.Tab(el);

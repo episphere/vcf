@@ -541,20 +541,32 @@ vcf.queryInBatch= async function(query,that){
 	        
 	        var count_pos = 0
 	        let i=0
+	        let aux=-1
+	        // 1000 genomes have unordered chromosomes
 	        for(i=0;i<that.idxx.length;i++){
-		        let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
+	            let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
 		        let posEnd=that.idxx[i].posEnd
-		        /*if(chrEnd>q[0]){ // chr range i ends beyond query
-			        break
-		        } else*/ 
-		        var count_pos = q[1].filter( x => posEnd >= x ).length
-		        if(chrEnd==q[0]&count_pos>0){
-			        break
+	            var count_pos = q[1].filter( x => posEnd >= x ).length
+	            if(chrEnd==q[0]&count_pos>0){
+			        aux=i
 		        }
-		        if(chrEnd>q[0]){ // chr range i ends beyond query
-			        break
-		        } 
 	        }
+	        
+	        if(aux==-1){
+	            for(i=0;i<that.idxx.length;i++){
+		            let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
+		            let posEnd=that.idxx[i].posEnd
+		            /*if(chrEnd>q[0]){ // chr range i ends beyond query
+			            break
+		            } else*/ 
+		            if(chrEnd>q[0]){ // chr range i ends beyond query
+		                break
+		            } 
+	            }
+	            aux=i
+	        }
+	        i=aux
+	        
 	        console.log(`Seed ${i}: `)
 	        
 	        previousRange='0:0-0:0'
@@ -661,7 +673,7 @@ vcf.queryInBatch= async function(query,that){
 	if(document.getElementById('progress')!=null){
         document.querySelector('.progress').style.display='none'
     }
-    
+    console.log(compiled)
 	return compiled
 }
 
@@ -678,7 +690,7 @@ vcf.queryInBatch= async function(query,that){
 * var sortedIndexes = await vcf.sortIdxx(v.idxx)
 */
 vcf.sortIdxx=(idxx)=>{
-	return idxx.sort((a,b)=>(a.ii[0]-b.ii[0]))
+    return idxx.sort((a,b)=>(a.ii[0]-b.ii[0]))
 }
 
 /** 
