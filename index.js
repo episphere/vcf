@@ -70,6 +70,7 @@ var v = null
                     }
                     
                     handleHits = (result, start) => {
+                    
                         var hits=[]
                         if(result.hit.length==0){
                             if(result.range==undefined){
@@ -96,7 +97,7 @@ var v = null
                             else{
                                 pagesContainer.innerHTML=''
                             }
-                            
+                            start=start*itemsPage
                             hits = hits.slice(start, start+itemsPage)
                             
                             var table_info=''
@@ -116,10 +117,9 @@ var v = null
                     
                     filterFun = async _=> {
                         
-                        /*
-                        filterb.disabled=true
-                        exporting.disabled=true
-                        */
+                        filter.innerHTML="Filtering ..."
+                        filter.disabled=true
+                                
                         var chromosome = chrom.value
                         var pos = position.value
                         
@@ -128,8 +128,7 @@ var v = null
                             
                             let url=vcfURL.value;  
                             Vcf(url).then( async (value) => {
-                                document.getElementById('filter').innerHTML="Filtering ..."
-                                document.getElementById('filter').disabled=true
+                                
                         
                                 v=value
                                 
@@ -147,8 +146,8 @@ var v = null
                                 runtime.innerHTML=  `${diff} seconds`
                                 infoTime.style.display="block"
                                 
-                                document.getElementById('filter').innerHTML="Filter"
-                                document.getElementById('filter').disabled=false
+                                filter.innerHTML="Filter"
+                                filter.disabled=false
                                 
                             })
                         }
@@ -164,6 +163,15 @@ var v = null
                     }
                     
                     filterBatchFun = async () => {
+                        var params = document.location.hash.indexOf('=')==-1 ? 'url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz&range=0,10000&query=7,151040280&scope=demo1' : document.location.hash ;
+                        params = params.replace('#','').split('&')
+                        var par = {}
+                        params.forEach( x => {
+                            if(x.split('=').length > 1){
+                                par[ x.split('=')[0] ] = x.split('=')[1]
+                            }
+                        })
+                        var scope=par['scope']
                         
                         /*
                         filter.disabled=true
@@ -178,14 +186,12 @@ var v = null
                         let url=vcfURL.value;   
                         
                         Vcf(url).then(  async(value) => {
-                            
-                            
                             v = value
                             
                             infoTimeb.style.display="none"
                             var start = performance.now()
                             
-                            var dat = await fetch(location.href.split('#')[0]+'multiple_query.json')
+                            var dat = await fetch(location.href.split('#')[0]+scope+'_multiple_query.json')
                             dat = await dat.json()
                             var result = await v.queryInBatch( dat['list'] ) 
                             makeHeader(v.cols)
@@ -218,20 +224,41 @@ var v = null
                     }
                     
                     handleUrlParams = () => {
-                        var params = document.location.hash.indexOf('=')==-1 ? 'url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz&range=0,10000&query=7,151040280' : document.location.hash ;
-                        params = params.replace('#','').split('&')
+                        var params = document.location.hash.indexOf('=')==-1 ? 'url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz&range=0,10000&query=7,151040280&scope=demo1' : document.location.hash ;
+                        var paramsl = params.replace('#','').split('&')
                         var par = {}
-                        params.forEach( x => {
+                        paramsl.forEach( x => {
                             if(x.split('=').length > 1){
                                 par[ x.split('=')[0] ] = x.split('=')[1]
                             }
                         })
-                        
-                        if(par['url'] == 'https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz' ){
-                            listFunction.style.display='block'
-                        }
-                        
+                       
                         var keys = Object.keys(par)
+                        
+                        var scope=''
+                        document.getElementById('listFunction').style.display='none'
+                        var dlist=[1,2,3]
+                        dlist.forEach( i => {
+                            scope='demo'+i
+                            document.getElementById(scope+'_info').style.display='none'
+                            
+                            document.getElementById(scope+'_example').style.display='none'
+                            document.getElementById(scope+'_file').style.display='none'
+                            
+                        })
+                        
+                        if(keys.includes('scope')){
+                            scope=par['scope']
+                            selectDemo.value=params.replace('#','')
+                            
+                            if( document.getElementById(scope+'_info')!=null ){
+                                document.getElementById(scope+'_info').style.display='block'
+                            
+                                document.getElementById(scope+'_example').style.display='block'
+                                document.getElementById(scope+'_file').style.display='block'
+                                document.getElementById('listFunction').style.display='block'
+                            }
+                        }
                         
                         var flagValidation = true
                         if( keys.includes('url')  ){

@@ -348,7 +348,7 @@ vcf.getIndexes=(that,ini)=>{
 			firstRow=dt[1]
 		}
 		// find last full row
-		let lastRow=dt[dt.length-1]
+		let lastRow= parseInt(dt[dt.length-1][1]) > parseInt(dt[dt.length-2][1]) ? dt[dt.length-1] : dt[dt.length-2]
 		that.idxx = that.idxx || []
 		that.ii00 = that.ii00 || []
 		
@@ -427,8 +427,8 @@ vcf.query= async function(q='1,10485',that){
 		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
 		//let posEnd = that.idxx[i].posEnd
 		var filteredDt = that.idxx[i].dt.filter(r=>r[0]==that.chrCode[chrStart])
-		var lastrow_filteredDt = filteredDt[filteredDt.length-1]
-		let posEnd = parseInt(lastrow_filteredDt[1]) // last position for this chromossome
+		var lastrow_filteredDt_posEnd = parseInt( filteredDt[filteredDt.length-1][1] ) > parseInt( filteredDt[filteredDt.length-2][1] ) ? parseInt( filteredDt[filteredDt.length-1][1] ) : parseInt( filteredDt[filteredDt.length-2][1] )
+		let posEnd = lastrow_filteredDt_posEnd // last position for this chromossome
 		//console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
 		
 		newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
@@ -491,84 +491,178 @@ vcf.query= async function(q='1,10485',that){
 * dat = await dat.json()
 * var result = await vcf.queryInBatch(dat['list'], v)
 */
-vcf.queryInBatch = async (query, that) => {
-    var compiled={ 'hit': [], 'range': { 'dt': [] } }
+vcf.queryInBatch= async function(query,that){
+	var compiled={ 'hit': [], 'range': { 'dt': [] } }
     
     var filtered = query.filter( p =>{ p.length==2 } )
     filtered = query.filter( p => that.chrCode.includes(String(p[0]))&!isNaN(parseInt(p[1])) )
     console.log('first filter: '+filtered.length)
     
+    var orderedQuery = {}
+    var total = 0
     if(filtered.length > 0){
-        var orderedQuery = []
-        that.chrCode.forEach( k => { 
-            orderedQuery = orderedQuery.concat( filtered.filter( p => String(p[0]) == String(k) ) ) 
-        })
-        console.log('2nd filter: '+orderedQuery.length)
-        
-        // Removing query repetitions and formatting
-        var gone = []
-        orderedQuery.forEach( async q => {
-            q=`${q[0]},${q[1]}`
-            if( ! gone.includes(q) ){
-                gone.push(q)
-                
-                /*var result = await that.query(q)
-                var checked = result.hit.filter( x => x.length==that.cols.length )
-                
-                */
-                
-                /*that.query(q).then( (result) => {
-                    compiled.hit = compiled.hit.concat(result.hit)
-                })*/
-            }   
-        })
-        console.log('3rd filter: '+gone.length)
-        
-        var total = gone.length
-        var counter=0
-        
-        if(document.getElementById('progress')!=null){
-            document.querySelector('.progress').style.display='block'
-            document.getElementById('progress').setAttribute('aria-valuenow', counter)
-            document.getElementById('progress').setAttribute('aria-valuemax', total)
-        }
-        
-        var checklist = await Promise.all( gone.map( async (q) => {
-            var result = await that.query(q)
-            var checked = result.hit.filter( x => x.length==that.cols.length )
-            checked.forEach( x => {
-                compiled.hit.push(x)
-            })
-            
-            if(result.range!=undefined){
-                checked=result.range.dt.filter( x => x.length==that.cols.length )
-                compiled.range.dt
-                checked.forEach( x => {
-                    compiled.range.dt.push(x)
+        that.chrCode.forEach( k => {
+            var temp = filtered.filter( p => String(p[0]) == String(k) )
+            if(temp.length > 0){
+                orderedQuery[k] = []
+                temp.forEach( x => {
+                    var pos = parseInt(x[1])
+                    if( ! orderedQuery[k].includes(pos) ){
+                        orderedQuery[k].push(pos)
+                        total+=1
+                    } 
                 })
+                orderedQuery[k].sort( (a,b) => (a>b) ? 1 : -1 )
             }
-            counter+=1
-            
-            if(document.getElementById('progress')!=null){
-                document.getElementById('progress').setAttribute('aria-valuenow', counter)
-                var perc=((counter*100)/total).toFixed(2)
-                document.getElementById('progress').innerHTML=perc+'% finished'
-                document.getElementById('progress').style.width=perc+'%'
-            }
-            
-            return q
-        }))
-        
-        if(document.getElementById('progress')!=null){
-            document.querySelector('.progress').style.display='none'
-        }
-            
-        that.lastQueryResult = compiled
+        })
     }
     else{
-        alert('There are no valid entries to query')
+        return compiled
     }
-    return compiled
+	
+	var counter=0
+    var chroms=Object.keys(orderedQuery)
+	    
+    if(document.getElementById('progress')!=null && chroms.length>0){
+        document.querySelector('.progress').style.display='block'
+        document.getElementById('progress').setAttribute('aria-valuenow', counter)
+        document.getElementById('progress').setAttribute('aria-valuemax', total)
+    }
+	
+	while(chroms.length>0){
+	    q=[ that.chrCode.indexOf(chroms[0]), orderedQuery[chroms[0]] ]
+	    if( q[1].length > 0 ){
+	        //console.log('-----_> chrom', q)
+	        
+	        // 1 -  find bounds
+	        let val={hit: [], range: undefined} // matching results will be pushed here
+	        let j=0  // counter
+	        // Make sure to start i at the range that precedes the query
+	        
+	        var count_pos = 0
+	        let i=0
+	        for(i=0;i<that.idxx.length;i++){
+		        let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
+		        let posEnd=that.idxx[i].posEnd
+		        /*if(chrEnd>q[0]){ // chr range i ends beyond query
+			        break
+		        } else*/ 
+		        var count_pos = q[1].filter( x => posEnd >= x ).length
+		        if(chrEnd==q[0]&count_pos>0){
+			        break
+		        }
+		        if(chrEnd>q[0]){ // chr range i ends beyond query
+			        break
+		        } 
+	        }
+	        console.log(`Seed ${i}: `)
+	        
+	        previousRange='0:0-0:0'
+	        
+	        var searchedRanges = []
+	        //console.log(`Query seed: ${i}`)
+	        while(i<that.idxx.length){
+		        //val=[] // reset every try
+		        j=j+1
+		        if(j>50){
+			        console.log(`${j} max iterations limit reached`)
+			        break
+		        }
+		        let chrStart = that.chrCode.indexOf(that.idxx[i].chrStart) // the index of the chromossome, not the chromossome name
+		        let posStart = that.idxx[i].posStart
+		        let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
+		        //let posEnd = that.idxx[i].posEnd
+		        var filteredDt = that.idxx[i].dt.filter(r=>r[0]==that.chrCode[chrStart])
+		        var lastrow_filteredDt_posEnd = parseInt( filteredDt[filteredDt.length-1][1] ) > parseInt( filteredDt[filteredDt.length-2][1] ) ? parseInt( filteredDt[filteredDt.length-1][1] ) : parseInt( filteredDt[filteredDt.length-2][1] )
+		        let posEnd = lastrow_filteredDt_posEnd // last position for this chromossome
+		        //sconsole.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
+		        
+		        newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
+		        //console.log(newRange == previousRange)
+		        if(newRange != previousRange){
+		            previousRange = newRange
+		            if (chrStart<q[0]){ // undershot chr target
+				            //i = i>0? i-1 : 0
+				            await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+				            //debugger
+		            }else{
+			            if(chrStart>q[0]){ // overshot
+				            i = i>0? i-1 : 0
+				            await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+			            }else{ // on chr target
+				            //console.log(`(${j}) chr match ${v.chrCode[chrStart]}`)
+				            //break
+				            //use only positions for this chr
+				            
+				            count_pos = q[1].filter( x => posStart<=x&posEnd>=x )
+				            if( count_pos.length>0 ){ // range found
+					            compiled.range.dt = compiled.range.dt.concat( that.idxx[i].dt.filter( x => x.length==that.cols.length ) )
+					            compiled.hit=compiled.hit.concat( that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&count_pos.includes(parseInt(r[1])) ) )
+					            count_pos.forEach( x => {
+					                orderedQuery[chroms[0]].splice(orderedQuery[chroms[0]].indexOf(x),1)
+					                q[1].splice(q[1].indexOf(x),1)
+					            })
+					            
+					            counter+=count_pos.length
+                                if(document.getElementById('progress')!=null){
+                                    document.getElementById('progress').setAttribute('aria-valuenow', counter)
+                                    var perc=((counter*100)/total).toFixed(2)
+                                    document.getElementById('progress').innerHTML=perc+'% finished'
+                                    document.getElementById('progress').style.width=perc+'%'
+                                }
+                                
+					            if(orderedQuery[chroms[0]].length==0){
+					                break
+					            }
+				            }
+				            else{ 
+				                count_pos = q[1].filter( x => posStart<x )
+				                if(count_pos.length>0){ // almost there
+					                //i = i>0? i-1 : 0
+					                await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+				                }
+				                else{ // overshot, take a step back
+					                i = i>0? i-1 : 0
+					                await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
+					                
+				                }
+				            }
+			            }
+		            }
+		        }
+		        else{
+		            val.range=that.idxx[i]
+		            compiled.range.dt = compiled.range.dt.concat( val.range.dt.filter( x => x.length==that.cols.length ) )
+			        compiled.hit = compiled.hit.concat( that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1]) )
+			        
+			        count_pos = orderedQuery[chroms[0]]
+			        counter+=count_pos.length
+                    if(document.getElementById('progress')!=null){
+                        document.getElementById('progress').setAttribute('aria-valuenow', counter)
+                        var perc=((counter*100)/total).toFixed(2)
+                        document.getElementById('progress').innerHTML=perc+'% finished'
+                        document.getElementById('progress').style.width=perc+'%'
+                    }
+			        console.log('-----_> chrom', that.chrCode[q[0]], ' -- not found anywhere ', count_pos)
+			        count_pos.forEach( x => {
+		                orderedQuery[chroms[0]].splice(orderedQuery[chroms[0]].indexOf(x),1)
+		                q[1].splice(q[1].indexOf(x),1)
+		            })
+			        break
+		        }
+		        i++
+	        }
+	    }
+	    chroms.splice(chroms.indexOf(chroms[0]),1)
+	}
+	
+	that.lastQueryResult = compiled
+	
+	if(document.getElementById('progress')!=null){
+        document.querySelector('.progress').style.display='none'
+    }
+    
+	return compiled
 }
 
 /** 

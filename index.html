@@ -33,9 +33,13 @@
                             [<a href="https://github.com/episphere/vcf/issues" target="_blank">issues</a>] 
                             [<a href="https://observablehq.com/@episphere/vcf" target="_blank" style="font-size:small;">notebook</a>] 
                             [<a href="https://gitter.im/episphere/terra" target="_blank">gitter</a>]
-                            [<a href="javascript:void(0)" onclick="document.location.hash='url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz&range=0,10000&query=7,151040280'; handleUrlParams(); event.preventDefault();" target="_blank">Demo DBSnp</a>]
-                            [<a href="javascript:void(0)" onclick="document.location.hash='url=http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr3.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz&range=20000,60000&query=3,60069'; handleUrlParams(); event.preventDefault();" target="_blank">Demo 1000 Genomes</a>]
-                            [<a href="javascript:void(0)" onclick="document.location.hash='url=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz&range=30000,80000&query=1,861366'; handleUrlParams(); event.preventDefault();" target="_blank">Demo ClinVar</a>]
+                            [
+                                <select id="selectDemo" onChange="document.location.hash=this.value; handleUrlParams();">
+                                    <option value="url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz&range=0,10000&query=7,151040280&scope=demo1" selected>Demonstration DBSnp</option>
+                                    <option value="url=http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr3.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz&range=20000,60000&query=3,60069&scope=demo2" >Demonstration 1000 Genomes</option>
+                                    <option value="url=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz&range=30000,80000&query=1,861366&scope=demo3">Demonstration ClinVar</option>
+                                </select>
+                            ]
                         </span>
                     </h1> 
                     
@@ -112,9 +116,11 @@
                                 <div class="col-12">
                                     <h3> 2 - Filtering chromosomes and positions <span style="font-size:small; color:green; display: none;" id='infoTime'>(Query execution time: <span id="runtime" style="color:red">...</span>)</span> </h3>
                                     <p> 
-                                    Choose a specific chromosome and position to search across the vcf file. Our search algorithm uses an strategy to optimize the search, returning the respective results in miliseconds. 
-                                    <br />
-                                    <span id='demo1_info'>Examples to try it out: chromosome 7 and position 151040280 (7,151040280), chromosome 10 and position 133421085 (10,133421085), chromosome 17 and position 7675353 (17,7675353).</span>
+                                        Choose a specific chromosome and position to search across the vcf file. Our search algorithm uses an strategy to optimize the search, returning the respective results in miliseconds. 
+                                        <br />
+                                        <span id='demo1_info'>Examples to try it out: chromosome 7 and position 151040280 (7,151040280), chromosome 10 and position 133421085 (10,133421085), chromosome 17 and position 7675353 (17,7675353).</span>
+                                        <span id='demo2_info' style='display: none;'>Examples to try it out: chromosome 1 and position 209189372 (1,209189372), chromosome 3 and position 60069 (3,60069), chromosome 1 and position 209190890 (1,209190890).</span>
+                                        <span id='demo3_info' style='display: none;'>Examples to try it out: chromosome 1 and position 861394 (1,861394), chromosome 1 and position 866421 (1,866421), chromosome 1 and position 10227817 (1,10227817).</span>
                                     </p>
                                     
                                     <form>
@@ -138,9 +144,15 @@
                                 <div class="col-12">
                                     <h3> 3 - Filtering a list of chromosomes and positions <span style="font-size:small; color:green; display: none;" id='infoTimeb'>(Query execution time: <span id="runtimeb" style="color:red">...</span>)</span> </h3>
                                     <p> 
-                                    Given a list of sublists containing a chromosome and a position ([["8","73458588"],["MT","11252"],["4","53814975"]]), it will validate the list according to the loaded chromosomes in the file and return the SNPs found for the specified query. 
+                                    <span id="demo1_example">Given a list of sublists containing a chromosome and a position ([["8","73458588"],["MT","11252"],["4","53814975"]]), it will validate the list according to the loaded chromosomes in the file and return the SNPs found for the specified query. </span>
+                                    <span id="demo1_file">In this example, it will read <a href='demo1_multiple_query.json' target='_blank' >this file</a> and use 445 pairs chromosome-position in the query.</span>
+                                    
+                                    <span id="demo2_example" style='display: none;'>Given a list of sublists containing a chromosome and a position ([["3","60079"],["3","60157"],["1","209189565"]]), it will validate the list according to the loaded chromosomes in the file and return the SNPs found for the specified query. </span>
+                                    <span id="demo2_file" style='display: none;'>In this example, it will read <a href='demo2_multiple_query.json' target='_blank' >this file</a> and use 172 pairs chromosome-position in the query.</span>
+                                    
+                                    <span id="demo3_example" style='display: none;'>Given a list of sublists containing a chromosome and a position ([["1","10227857"],["1","10227363"],["1","871158"]]), it will validate the list according to the loaded chromosomes in the file and return the SNPs found for the specified query. </span>
                                     <br />
-                                    In this example, it will read <a href='multiple_query.json' >this file</a> and use 445 pairs chromosome-position in the query.
+                                    <span id="demo3_file" style='display: none;'>In this example, it will read <a href='demo3_multiple_query.json' target='_blank' >this file</a> and use 81 pairs chromosome-position in the query.</span>
                                     </p>
                                     
                                     <form>
@@ -151,7 +163,7 @@
                                     </form>
                                     
                                     <div class="progress" style="display: none">
-                                      <div class="progress-bar" id="progress" role="progressbar" style="width: 25%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                      <div class="progress-bar" id="progress" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                                     </div>
                                     
                                 </div>
@@ -195,10 +207,11 @@
                     
                     
                     /*
-                        regular expressions to get the list of query from idxx
+                        regular expressions to get the list of query from idxx -> dt
                         rs(.*)\n - \n
                         (\d*)\n: \n(.*)\[ -> \n[
                         , '\n\n -> ],\n
+                        ' -> "
                     */
                     
                     gendoc.buildDocumentation( location.href.split('#')[0]+'vcf.js', 'documentation-content', 'https://github.com/episphere/vcf/blob/main/vcf.js')
