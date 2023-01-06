@@ -93,6 +93,9 @@ var v = null
                                 makePages(numPages)
                                 document.getElementById('pit'+(start+1)).className='page-item active'
                             }  
+                            else{
+                                pagesContainer.innerHTML=''
+                            }
                             
                             hits = hits.slice(start, start+itemsPage)
                             

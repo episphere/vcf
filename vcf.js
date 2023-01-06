@@ -289,7 +289,7 @@ vcf.fetchRange=(range,url)=>{
 * @returns {array} Lines of metadata of the vcf file.
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * var meta = await vcf.getMetadata(v)
 */
 vcf.getMetadata= async that=>{ // extract metadata
@@ -310,7 +310,7 @@ vcf.getMetadata= async that=>{ // extract metadata
 * @param {Object} that Vcf library object.
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * var tail = await vcf.getTail(v)
 *
 */
@@ -331,7 +331,7 @@ vcf.getTail=async that=>{ // to be run after vcf.getMetadata, to find tail index
 * @param {Object} ini An object output of vcf.fetchGz, containing the following attributes: txt - text of the range just read, arrBuff - bytes read as array buffer, idx - indexes of this range, range - array with the start and end byte indexes, url - vcf file url.
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * let ini = await vcf.fetchGz([0,500000], v.url)
 * var indexes = await vcf.getIndexes(v, ini)
 *
@@ -348,7 +348,7 @@ vcf.getIndexes=(that,ini)=>{
 			firstRow=dt[1]
 		}
 		// find last full row
-		let lastRow=dt.slice(-2,-1)[0]
+		let lastRow=dt[dt.length-1]
 		that.idxx = that.idxx || []
 		that.ii00 = that.ii00 || []
 		
@@ -378,7 +378,7 @@ vcf.getIndexes=(that,ini)=>{
 * @returns {Object} Search result object, containing the following attributes: hit - array containing the vcf table lines with the SNPs found in the chromosome and position searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object).
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * var result = await vcf.query('7,151040280', v)
 */
 vcf.query= async function(q='1,10485',that){
@@ -399,13 +399,17 @@ vcf.query= async function(q='1,10485',that){
 	for(i=0;i<that.idxx.length;i++){
 		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
 		let posEnd=that.idxx[i].posEnd
-		if(chrEnd>q[0]){ // chr range i ends beyond query
+		/*if(chrEnd>q[0]){ // chr range i ends beyond query
 			break
-		} else if(chrEnd==q[0]&posEnd>=q[1]){
+		} else*/ 
+		if(chrEnd==q[0]&posEnd>=q[1]){
 			break
 		}
+		else if(chrEnd>q[0]){ // chr range i ends beyond query
+			break
+		} 
 	}
-	console.log(`Seed ${i}: start - ${that.idxx[i].chrStart}; end - ${that.idxx[i].chrEnd}`)
+	//console.log(`Seed ${i}: `)
 	
 	previousRange='0:0-0:0'
 	
@@ -422,11 +426,13 @@ vcf.query= async function(q='1,10485',that){
 		let posStart = that.idxx[i].posStart
 		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
 		//let posEnd = that.idxx[i].posEnd
-		let posEnd = parseInt(that.idxx[i].dt.filter(r=>r[0]==that.chrCode[chrStart]).slice(-2,-1)[0][1]) // last position for this chromossome
+		var filteredDt = that.idxx[i].dt.filter(r=>r[0]==that.chrCode[chrStart])
+		var lastrow_filteredDt = filteredDt[filteredDt.length-1]
+		let posEnd = parseInt(lastrow_filteredDt[1]) // last position for this chromossome
 		//console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
 		
 		newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
-		console.log(newRange == previousRange)
+		//console.log(newRange == previousRange)
 		if(newRange != previousRange){
 		    previousRange = newRange
 		    if (chrStart<q[0]){ // undershot chr target
@@ -442,7 +448,7 @@ vcf.query= async function(q='1,10485',that){
 				    //break
 				    //use only positions for this chr
 				    
-				    if((posStart<q[1])&(posEnd>q[1])){ // range found
+				    if((posStart<=q[1])&(posEnd>=q[1])){ // range found
 					    val.range=that.idxx[i]
 					    val.hit=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
 					    break
@@ -480,16 +486,18 @@ vcf.query= async function(q='1,10485',that){
 * @returns {Object} Search result object, containing the following attribute: hit - array containing the vcf table lines with the SNPs found in the chromosome an dposition searched.
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * var dat = await fetch(location.href.split('#')[0]+'multiple_query.json')
 * dat = await dat.json()
 * var result = await vcf.queryInBatch(dat['list'], v)
 */
 vcf.queryInBatch = async (query, that) => {
     var compiled={ 'hit': [], 'range': { 'dt': [] } }
+    
     var filtered = query.filter( p =>{ p.length==2 } )
     filtered = query.filter( p => that.chrCode.includes(String(p[0]))&!isNaN(parseInt(p[1])) )
     console.log('first filter: '+filtered.length)
+    
     if(filtered.length > 0){
         var orderedQuery = []
         that.chrCode.forEach( k => { 
@@ -528,9 +536,16 @@ vcf.queryInBatch = async (query, that) => {
         var checklist = await Promise.all( gone.map( async (q) => {
             var result = await that.query(q)
             var checked = result.hit.filter( x => x.length==that.cols.length )
-            compiled.hit = compiled.hit.concat( checked )
+            checked.forEach( x => {
+                compiled.hit.push(x)
+            })
+            
             if(result.range!=undefined){
-                compiled.range.dt = compiled.range.dt.concat( result.range.dt.filter( x => x.length==that.cols.length ) )
+                checked=result.range.dt.filter( x => x.length==that.cols.length )
+                compiled.range.dt
+                checked.forEach( x => {
+                    compiled.range.dt.push(x)
+                })
             }
             counter+=1
             
@@ -565,7 +580,7 @@ vcf.queryInBatch = async (query, that) => {
 * @returns {Object} Same object received as input but sorted.
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * var sortedIndexes = await vcf.sortIdxx(v.idxx)
 */
 vcf.sortIdxx=(idxx)=>{
@@ -641,7 +656,7 @@ vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606
 * @returns {Object} An object containing the following attributes: chunks - array containing the chunk indexes, chrPos - Chromosome Positions found in the chunks.
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * var index = await vcf.indexGz(v.url, v.size)
 */
 vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20201026.vcf.gz', size)=>{
@@ -690,7 +705,7 @@ vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinv
 * @returns {array} A list of the indexes from the current chunk that matched with the compression indexes.
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * var matched = await vcf.indexGz( [21, 39, 39, 13, 9, 24, 4, 6, 27, 18, 2, 25, 35, 8, 26, 14, 18, 31, 23, 18], v.gzKey)
 */
 vcf.matchKey=(arr, key=vcf.gzKey)=>{
@@ -711,7 +726,7 @@ vcf.matchKey=(arr, key=vcf.gzKey)=>{
 * @returns {Object} Compressed binary file.
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * var index = await vcf.indexGz(v.url, v.size)
 * await vcf.compressIdx(index, 'indexFile.gz')
 * var content = await vcf.compressIdx(index)
@@ -755,7 +770,7 @@ vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00
 * @returns {HTMLAnchorElement} HTML anchor (<a />) element with the click event fired.
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * v.query('7,151040280')
 * var tag = await vcf.saveQueryResult(v)
 * tag = v.saveQueryResult()
@@ -783,7 +798,7 @@ vcf.saveQueryResult= (that)=>{
 * @returns {HTMLAnchorElement} HTML anchor (<a />) element with the click event fired.
 * 
 * @example
-* let v = await new Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
+* let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * var index = await vcf.indexGz(v.url, v.size)
 * var content = await vcf.compressIdx(index)
 * var tagA = await vcf.saveFile(content, 'indexFile.gz')
