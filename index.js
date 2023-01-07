@@ -227,7 +227,8 @@ var v = null
                             var y1_time = []
                             var y2_qlength = []
                             keys.forEach( i => {
-                                x.push('Chromosome '+i)
+                                var name = i=='total' ? 'Total' : 'Chromosome '+i
+                                x.push(name)
                                 y1_time.push( Number(pdata[i]['time'].toFixed(2)) )
                                 y2_qlength.push(pdata[i]['queryLength'])
                             })
