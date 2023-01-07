@@ -2,6 +2,57 @@ var v = null
                     var itemsPage = 20
                     var all_results = {}
                     
+                    makeRetrievalPlot = () => {
+                        plotRetrieval.innerHTML=''
+                        
+                        let url=vcfURL.value;   
+                        Vcf(url).then( async (value) => {
+                            v = value
+                            var multi = [1,2,3,4,5, 6]
+                            var yinfo = await Promise.all( multi.map( async i => {
+                                var endr = 100*(10**i)
+                                console.log(endr)
+                                if(endr < v.size){
+                                    range = [0, endr]
+                                    var st = performance.now()
+                                    let res =  await v.fetchGz(range)
+                                    var end = performance.now()
+                                    var diff = Number((end-st).toFixed(2))
+                                    console.log(diff)
+                                    return [`Range 0-10^${i+2}`, diff]
+                                }
+                            }))
+                            console.log(yinfo)
+                            
+                            if(yinfo.length>0){
+                                var x = []
+                                var y1_time = []
+                                yinfo.forEach( i => {
+                                    x.push(i[0])
+                                    y1_time.push( i[1] )
+                                })
+                                
+                                var trace1 = {
+                                  x: x,
+                                  y: y1_time,
+                                  text: y1_time, 
+                                  name: 'Execution Time',
+                                  type: 'bar'
+                                };
+
+                                var data = [trace1];
+
+                                var layout = {
+                                  title: 'Retrieval Performance comparison',
+                                  xaxis: {title: 'Retrieval Ranges'},
+                                  yaxis: {title: 'Time (ms)'}
+                                };
+
+                                Plotly.newPlot('plotRetrieval', data, layout);
+                            }
+                        })
+                    }
+                    
                     readRangeFun=async _=>{
                         
                         readRange.innerHTML="Reading ..."
@@ -294,6 +345,9 @@ var v = null
                        
                         var keys = Object.keys(par)
                         
+                        plotRetrieval.innerHTML=''
+                        plotPerfomance.innerHTML=''
+                        
                         var scope=''
                         document.getElementById('listFunction').style.display='none'
                         var dlist=[1,2,3]
@@ -376,6 +430,8 @@ var v = null
                             var el = document.querySelector('#home-tab')
                             var tab = new bootstrap.Tab(el);
                             tab.show()
+                            
+                            //makeRetrievalPlot()
                             
                             readRangeFun()
                             
