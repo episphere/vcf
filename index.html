@@ -6,7 +6,7 @@
         
         <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.5.0/jszip.min.js"></script>
-    
+        <script src='https://cdn.plot.ly/plotly-2.16.1.min.js'></script>
         
         <link rel="icon" href="favicon.ico" type="image/x-icon"/>
         
@@ -68,7 +68,7 @@
                             
                             <p> 
                                 Although the real action is in the console, this page will be used to test the JavaScript vcf SDK. To do so, select the URL of the remote VCF file (or use default test VCF file borrowed from <a href="https://www.nature.com/articles/s41598-019-49114-z" target="_blank">Tollefson 2019</a>), and then try different methods. 
-                                For examples of the real-world challange see <a href="https://ftp.ncbi.nlm.nih.gov/pub/clinvar" target="_blank">clinVar</a>, <a href="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/" target="_blank">snp</a> or <a href="http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/" target="_blank">1000genomes</a>.
+                                For examples of the real-world challenge see <a href="https://ftp.ncbi.nlm.nih.gov/pub/clinvar" target="_blank">clinVar</a>, <a href="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/" target="_blank">snp</a> or <a href="http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/" target="_blank">1000genomes</a>.
                             </p>
                         </section>
                         
@@ -166,6 +166,8 @@
                                       <div class="progress-bar" id="progress" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                                     </div>
                                     
+                                    <div id="plotPerfomance"></div>
+                                    
                                 </div>
                             </div>
                             
@@ -204,7 +206,6 @@
                 
                 <script>
                     //fetch("00-All.vcf.gz.idx.json").then(x=>x.json().then(x=>{idx=x;readRange.disabled=false}))
-                    
                     
                     /*
                         regular expressions to get the list of query from idxx -> dt

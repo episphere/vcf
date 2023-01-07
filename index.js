@@ -15,7 +15,11 @@ var v = null
                         }
                         
                         let url=vcfURL.value;   
-                        let range=[parseInt(rangeStart.value),parseInt(rangeEnd.value)]
+                        let start = parseInt(rangeStart.value)>0 ? parseInt(rangeStart.value) : 0
+                        let end = (parseInt(rangeEnd.value)>0 && parseInt(rangeEnd.value)>start ) ? parseInt(rangeEnd.value) : start+10000
+                        rangeStart.value = start
+                        rangeEnd.value = end
+                        let range=[start, end]
                         
                         Vcf(url).then( async (value) => {
                             v = value
@@ -162,6 +166,60 @@ var v = null
                         */
                     }
                     
+                    makePerformancePlot = (pdata) => {
+                        plotPerfomance.innerHTML=''
+                        
+                        var keys = Object.keys(pdata)
+                        
+                        if(keys.length>2){
+                            var x = []
+                            var y1_time = []
+                            var y2_qlength = []
+                            keys.forEach( i => {
+                                x.push('Chromosome '+i)
+                                y1_time.push( Number(pdata[i]['time'].toFixed(2)) )
+                                y2_qlength.push(pdata[i]['queryLength'])
+                            })
+                            
+                            var trace1 = {
+                              x: x,
+                              y: y1_time,
+                              text: y1_time, 
+                              name: 'Execution Time',
+                              type: 'bar'
+                            };
+
+                            var trace2 = {
+                              x: x,
+                              y: y2_qlength,
+                              mode: 'lines+markers+text',
+                              text: y2_qlength,
+                              textposition: 'top',
+                              name: 'Number of pairs',
+                              yaxis: 'y2',
+                              type: 'scatter'
+                            };
+
+                            var data = [trace1, trace2];
+
+                            var layout = {
+                              legend: { x: 1.05 },
+                              title: 'Performance comparison by chromosome',
+                              xaxis: {title: 'Chromosomes'},
+                              yaxis: {title: 'Time (ms)'},
+                              yaxis2: {
+                                title: 'Count',
+                                titlefont: {color: 'rgb(148, 103, 189)'},
+                                tickfont: {color: 'rgb(148, 103, 189)'},
+                                overlaying: 'y',
+                                side: 'right'
+                              }
+                            };
+
+                            Plotly.newPlot('plotPerfomance', data, layout);
+                        }
+                    }
+                    
                     filterBatchFun = async () => {
                         var params = document.location.hash.indexOf('=')==-1 ? 'url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz&range=0,10000&query=7,151040280&scope=demo1' : document.location.hash ;
                         params = params.replace('#','').split('&')
@@ -197,6 +255,7 @@ var v = null
                             makeHeader(v.cols)
                             handleHits(result, 0)
                             all_results = result
+                            makePerformancePlot(all_results['performanceTime'])
                             
                             var end = performance.now()
                             var diff=((end-start)/1000).toFixed(2)
