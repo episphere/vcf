@@ -11,7 +11,7 @@ var v = null
                             var multi = [1,2,3,4,5, 6]
                             var yinfo = await Promise.all( multi.map( async i => {
                                 var endr = 100*(10**i)
-                                console.log(endr)
+                                //console.log(endr)
                                 if(endr < v.size){
                                     range = [0, endr]
                                     var st = performance.now()
@@ -22,7 +22,7 @@ var v = null
                                     return [`Range 0-10^${i+2}`, diff]
                                 }
                             }))
-                            console.log(yinfo)
+                            //console.log(yinfo)
                             
                             if(yinfo.length>0){
                                 var x = []
