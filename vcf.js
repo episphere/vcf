@@ -55,7 +55,7 @@ vcf.chrCode='1-22,X,Y,XY,MT,0'
 
 class VcfObject {
     constructor(url, keyGap, chrCode){
-        this.url=url.replace('http://', 'https://')
+        this.url=url.replace('http:', 'https:')
         
         this.date=new Date()
         this.keyGap=keyGap||vcf.keyGap
@@ -411,7 +411,7 @@ vcf.query= async function(q='1,10485',that){
 			break
 		} 
 	}
-	//console.log(`Seed ${i}: `)
+	console.log(`Seed ${i}: `)
 	
 	previousRange='0:0-0:0'
 	
@@ -431,7 +431,7 @@ vcf.query= async function(q='1,10485',that){
 		var filteredDt = that.idxx[i].dt.filter(r=>r[0]==that.chrCode[chrStart])
 		var lastrow_filteredDt_posEnd = parseInt( filteredDt[filteredDt.length-1][1] ) > parseInt( filteredDt[filteredDt.length-2][1] ) ? parseInt( filteredDt[filteredDt.length-1][1] ) : parseInt( filteredDt[filteredDt.length-2][1] )
 		let posEnd = lastrow_filteredDt_posEnd // last position for this chromossome
-		//console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
+		console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
 		
 		newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
 		//console.log(newRange == previousRange)
@@ -596,7 +596,7 @@ vcf.queryInBatch= async function(query,that){
 		        var filteredDt = that.idxx[i].dt.filter(r=>r[0]==that.chrCode[chrStart])
 		        var lastrow_filteredDt_posEnd = parseInt( filteredDt[filteredDt.length-1][1] ) > parseInt( filteredDt[filteredDt.length-2][1] ) ? parseInt( filteredDt[filteredDt.length-1][1] ) : parseInt( filteredDt[filteredDt.length-2][1] )
 		        let posEnd = lastrow_filteredDt_posEnd // last position for this chromossome
-		        //sconsole.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
+		        console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
 		        
 		        newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
 		        //console.log(newRange == previousRange)
