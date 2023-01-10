@@ -412,7 +412,7 @@ vcf.getIndexes=(that,ini)=>{
 * @param {string} [q=1,10485] Search parameter in the format 'chromosome,position'.
 * @param {Object} that Vcf library object.
 *
-* @returns {Object} Search result object, containing the following attributes: hit - array containing the vcf table lines with the SNPs found in the chromosome and position searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object), performanceTime - the total time spent in the query execution in miliseconds.
+* @returns {Object} Search result object, containing the following attributes: hit - array containing the vcf table lines with the SNPs found in the chromosome and position searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object), executionTime - the total time spent in the query execution in miliseconds.
 * 
 * @example
 * let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
@@ -430,7 +430,7 @@ vcf.query= async function(q='1,10485',that){
 	// start iterative querying
 	//console.log(`range search for (${q})`)
 	// 1 -  find bounds
-	let val={hit: [], range: undefined, performanceTime: 0} // matching results will be pushed here
+	let val={hit: [], range: undefined, executionTime: 0} // matching results will be pushed here
 	let j=0  // counter
 	// Make sure to start i at the range that precedes the query
 	
@@ -512,7 +512,7 @@ vcf.query= async function(q='1,10485',that){
 		i++
 	}
 	var end = performance.now()
-	val['performanceTime'] = end-st
+	val['executionTime'] = end-st
 	    
 	that.lastQueryResult = val
 	return val
@@ -525,7 +525,7 @@ vcf.query= async function(q='1,10485',that){
 * @param {array} [query=[["8","73458588"],["MT","11252"],["4","53814975"]] Search parameter in the format of a list of sublists containing chromosome in position 0 and position in position 1.
 * @param {Object} that Vcf library object.
 *
-* @returns {Object} Search result object, containing the following attribute: hit - array containing the vcf table lines with the SNPs found in the chromosome and position searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object), performanceTime - the total time spent in the query execution in miliseconds grouped by chromosome and the overall execution together with the query length.
+* @returns {Object} Search result object, containing the following attribute: hit - array containing the vcf table lines with the SNPs found in the chromosome and position searched, range - the object with the specific chunk content in which the search obtained hits (same attributes as one of the idxx attribute items found in the Vcf main library object), executionTime - the total time spent in the query execution in miliseconds grouped by chromosome and the overall execution together with the query length.
 * 
 * @example
 * let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
@@ -534,7 +534,7 @@ vcf.query= async function(q='1,10485',that){
 * var result = await vcf.queryInBatch(dat['list'], v)
 */
 vcf.queryInBatch= async function(query,that){
-	var compiled={ 'hit': [], 'range': { 'dt': [] }, 'performanceTime': {} }
+	var compiled={ 'hit': [], 'range': { 'dt': [] }, 'executionTime': {} }
     
     var filtered = query.filter( p =>{ p.length==2 } )
     filtered = query.filter( p => that.chrCode.includes(String(p[0]))&!isNaN(parseInt(p[1])) )
@@ -554,7 +554,7 @@ vcf.queryInBatch= async function(query,that){
                     } 
                 })
                 orderedQuery[k].sort( (a,b) => (a>b) ? 1 : -1 )
-                compiled['performanceTime'][k]={'time': 0, 'queryLength': orderedQuery[k].length }
+                compiled['executionTime'][k]={'time': 0, 'queryLength': orderedQuery[k].length }
             }
         })
     }
@@ -572,7 +572,7 @@ vcf.queryInBatch= async function(query,that){
         document.getElementById('progress').setAttribute('aria-valuemax', total)
     }
 	
-	compiled['performanceTime']['total']={'time': 0, 'queryLength': total }
+	compiled['executionTime']['total']={'time': 0, 'queryLength': total }
 	var tst = performance.now()
 	while(chroms.length>0){
 	    var st = performance.now()
@@ -712,12 +712,12 @@ vcf.queryInBatch= async function(query,that){
 	        }
 	    }
 	    var end = performance.now()
-	    compiled['performanceTime'][chroms[0]]['time'] = end-st
+	    compiled['executionTime'][chroms[0]]['time'] = end-st
 	    
 	    chroms.splice(chroms.indexOf(chroms[0]),1)
 	}
 	var tend = performance.now()
-	compiled['performanceTime']['total']['time'] = tend-tst
+	compiled['executionTime']['total']['time'] = tend-tst
 	
 	that.lastQueryResult = compiled
 	

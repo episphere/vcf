@@ -84,11 +84,11 @@ var v = null
                         var resultwithPosOk = await v.queryInBatch( query ) 
                         console.log(resultwithPosOk)
                         var yinfowithPosOk=[]
-                        var keys = Object.keys(resultwithPosOk['performanceTime'])
+                        var keys = Object.keys(resultwithPosOk['executionTime'])
                         keys.forEach( x => {
                             if(x!='total'){
-                                var qpos = resultwithPosOk['performanceTime'][x]['queryLength']
-                                var time = resultwithPosOk['performanceTime'][x]['time']/qpos
+                                var qpos = resultwithPosOk['executionTime'][x]['queryLength']
+                                var time = resultwithPosOk['executionTime'][x]['time']/qpos
                                 for (var i =0; i<qpos; i++){
                                     var diff = Number( Math.log10(time).toFixed(2))
                                     yinfowithPosOk.push( diff )
@@ -102,11 +102,11 @@ var v = null
                         var resultwithPosNotOk = await v.queryInBatch( dummy_query ) 
                         console.log(resultwithPosNotOk)
                         var yinfowithPosNotOk=[]
-                        var keys = Object.keys(resultwithPosNotOk['performanceTime'])
+                        var keys = Object.keys(resultwithPosNotOk['executionTime'])
                         keys.forEach( x => {
                             if(x!='total'){
-                                var qpos = resultwithPosNotOk['performanceTime'][x]['queryLength']
-                                var time = resultwithPosNotOk['performanceTime'][x]['time']/qpos
+                                var qpos = resultwithPosNotOk['executionTime'][x]['queryLength']
+                                var time = resultwithPosNotOk['executionTime'][x]['time']/qpos
                                 for (var i =0; i<qpos; i++){
                                     var diff = Number( Math.log10(time).toFixed(2))
                                     yinfowithPosNotOk.push( diff )
@@ -496,7 +496,7 @@ var v = null
                             makeHeader(v.cols)
                             handleHits(result, 0)
                             all_results = result
-                            makePerformancePlot(all_results['performanceTime'])
+                            makePerformancePlot(all_results['executionTime'])
                             
                             var end = performance.now()
                             var diff=((end-start)/1000).toFixed(2)
