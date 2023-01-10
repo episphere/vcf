@@ -1,10 +1,6 @@
 console.log('vcf.js loaded')
 
 /* Initializes object with default example parameters */
-vcf={}
-vcf.gzKey=[31,139,8,4,0,0,0,0,0,255,6,0,66,67,2,0]
-vcf.keyGap=20000-1
-vcf.chrCode='1-22,X,Y,XY,MT,0'
 
 /**
  * Main global portable module.
@@ -28,6 +24,47 @@ vcf.chrCode='1-22,X,Y,XY,MT,0'
  * @property {Function} saveQueryResult - {@link vcf.saveQueryResult}
  * @property {Function} loadScript - {@link vcf.loadScript}
  */
+vcf={}
+vcf.gzKey=[31,139,8,4,0,0,0,0,0,255,6,0,66,67,2,0]
+vcf.keyGap=20000-1
+vcf.chrCode='1-22,X,Y,XY,MT,0'
+
+/** 
+* Load a certain dependency library from link
+* 
+*
+* @param {string} url Library URL.
+* 
+* @example
+* vcf.loadScript('https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js')
+*
+*/
+vcf.loadScript= async function(url,fun=function(){
+	console.log(`${url} loading`)
+}){
+	//console.log(`${url} loaded`)
+    async function asyncScript(url){
+        let load = new Promise((resolve,regect)=>{
+            let s = document.createElement('script')
+            s.src=url
+            s.onload=function(){
+				//debugger
+				fun()
+				resolve()
+			}
+            document.head.appendChild(s)
+        })
+        await load
+    }
+    // satisfy dependencies
+    await asyncScript(url)
+}
+
+if(!vcf.pako){
+	vcf.loadScript('https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js',function(){
+		vcf.pako=pako
+	})
+}
  
  /**
  *
@@ -756,7 +793,7 @@ vcf.fetchGz=async(range=0,url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606
     const id = vcf.matchKey(it.slice(0, keyGap))
     
     let res = {
-    	txt:pako.inflate(ab.slice(id[0]),{"to":"string"}),
+    	txt:vcf.pako.inflate(ab.slice(id[0]),{"to":"string"}),
     	arrBuff:ab,
     	idx:id.map(v=>v+range[0]),
     	range:range,
@@ -800,7 +837,7 @@ vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinv
             idx.chunks.push(x)
             let n = 1000
             if(i+x==0){n=100000}
-            let txt=pako.inflate(arr.slice(x-i,x+n-i),{to:'string'})
+            let txt=vcf.pako.inflate(arr.slice(x-i,x+n-i),{to:'string'})
             txts = txt.split(/\n(\w+\t+\w+)/)
             let chrPos = [null,null]
             if(txts.length>1){
@@ -854,7 +891,7 @@ vcf.matchKey=(arr, key=vcf.gzKey)=>{
 vcf.compressIdx=function(idx,filename){
     // string it
     //let xx = pako.deflate(idx.chunks.concat(idx.chrPos.map(x=>x[0]).concat(idx.chrPos.map(x=>x[1]))))
-    let xx = pako.gzip(idx.chunks.concat(idx.chrPos.map(x=>x[0]).concat(idx.chrPos.map(x=>x[1]))))
+    let xx = vcf.pako.gzip(idx.chunks.concat(idx.chrPos.map(x=>x[0]).concat(idx.chrPos.map(x=>x[1]))))
     if(filename){
         vcf.saveFile(xx,filename)
     }
@@ -965,7 +1002,11 @@ vcf.loadScript= async function(url){
 
 
 if(typeof(define)!='undefined'){
-    define({proto:vcf})
+    define(['https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js'],function(pako){
+		vcf.pako=pako
+		vcf.Vcf=Vcf
+		return vcf
+	})
 }
 
 if(typeof(pako)=="undefined"){
