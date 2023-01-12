@@ -1026,4 +1026,4 @@ if(typeof(pako)=="undefined"){
 //	define(vcf)
 //}
 
-export {vcf,Vcf}
+export {Vcf}
