@@ -380,6 +380,9 @@ vcf.getIndexes=(that,ini)=>{
     	console.log('Error: No data was read')
     }
     if(dt.length>1){
+    	if( isNaN(parseInt(dt[0][0])) || dt[0][0]!=dt[1][0] || isNaN(parseInt(dt[0][1])) || ( parseInt(dt[0][1]) >= parseInt(dt[1][1]) ) ){
+            dt=dt.slice(1)
+        }
     	let firstRow = dt[0]
 		if(firstRow.length!=dt[1].length){ // if first and second rows have different numbers of columns
 			firstRow=dt[1]
@@ -419,6 +422,7 @@ vcf.getIndexes=(that,ini)=>{
 * var result = await vcf.query('7,151040280', v)
 */
 vcf.query= async function(q='1,10485',that){
+    q=q.replace(":", ",") // to allow both patterns - "chr:pos" and "chr,pos"
     var st = performance.now()
     
 	if(typeof(q)=='string'){ // chr,pos
@@ -435,19 +439,36 @@ vcf.query= async function(q='1,10485',that){
 	// Make sure to start i at the range that precedes the query
 	
 	let i=0
-	for(i=0;i<that.idxx.length;i++){
-		let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
-		let posEnd=that.idxx[i].posEnd
-		/*if(chrEnd>q[0]){ // chr range i ends beyond query
-			break
-		} else*/ 
-		if(chrEnd==q[0]&posEnd>=q[1]){
-			break
-		}
-		else if(chrEnd>q[0]){ // chr range i ends beyond query
-			break
-		} 
-	}
+	
+    let aux=-1
+    // 1000 genomes have unordered chromosomes
+    for(i=0;i<that.idxx.length;i++){
+        let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
+        let pStart=that.idxx[i].posStart
+        let posEnd=that.idxx[i].posEnd
+        
+        if(chrEnd==q[0]&pStart<=q[1]&posEnd>=q[1]){
+	        aux=i
+	        break
+        }
+    }
+    
+    if(aux==-1){
+        for(i=0;i<that.idxx.length;i++){
+            let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
+            let pStart=that.idxx[i].posStart
+            let posEnd=that.idxx[i].posEnd
+            /*if(chrEnd>q[0]){ // chr range i ends beyond query
+	            break
+            } else*/ 
+            if(chrEnd>q[0]  ){ // chr range i ends beyond query
+                break
+            } 
+        }
+        i = (i==that.idxx.length) ? i-1 : i
+        aux=i
+    }
+    i=aux
 	console.log(`Seed ${i}: `)
 	
 	previousRange='0:0-0:0'
@@ -488,7 +509,7 @@ vcf.query= async function(q='1,10485',that){
 				    //use only positions for this chr
 				    
 				    if((posStart<=q[1])&(posEnd>=q[1])){ // range found
-					    val.range=that.idxx[i]
+					    val.range=that.idxx[i].dt.filter( x => x.length==that.cols.length )
 					    val.hit=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
 					    break
 				    }else if(posStart<q[1]){ // almost there
@@ -595,6 +616,7 @@ vcf.queryInBatch= async function(query,that){
 	            var count_pos = q[1].filter( x => posEnd >= x ).length
 	            if(chrEnd==q[0]&count_pos>0){
 			        aux=i
+			        break
 		        }
 	        }
 	        
@@ -863,7 +885,7 @@ vcf.indexGz=async(url='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinv
 * 
 * @example
 * let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
-* var matched = await vcf.indexGz( [21, 39, 39, 13, 9, 24, 4, 6, 27, 18, 2, 25, 35, 8, 26, 14, 18, 31, 23, 18], v.gzKey)
+* var matched = await vcf.indexGz( [21, 39, 39, 13, 9, 24, 4, 6, 27, 18, 2, 25, 35, 8, 26, 14, 18, 31, 23, 18], v.gzKey)
 */
 vcf.matchKey=(arr, key=vcf.gzKey)=>{
     let ind=arr.map((x,i)=>i) // the indexes

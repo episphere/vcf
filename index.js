@@ -317,7 +317,7 @@ var v = null
                     
                         var hits=[]
                         if(result.hit.length==0){
-                            if(result.range==undefined){
+                            if(result.range==undefined || result.range.dt==undefined){
                                 alert('The chromosome used in the search was not found in the VCF file')
                             }
                             else{
@@ -382,6 +382,7 @@ var v = null
                                 var q = `${chromosome},${pos}`
                                 var result = await v.query(q)
                                 makeHeader(v.cols)
+                                console.log(result)
                                 handleHits(result, 0)
                                 all_results = result
                                 
