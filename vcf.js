@@ -419,6 +419,7 @@ vcf.getIndexes=(that,ini)=>{
 * var result = await vcf.query('7,151040280', v)
 */
 vcf.query= async function(q='1,10485',that){
+    q=q.replace(":", ",") // to allow both patterns - "chr:pos" and "chr,pos"
     var st = performance.now()
     
 	if(typeof(q)=='string'){ // chr,pos
