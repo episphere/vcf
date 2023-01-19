@@ -13,7 +13,7 @@ console.log('vcf.js loaded')
  * @property {Function} getTail - {@link vcf.getTail}
  * @property {Function} getIndexes - {@link vcf.getIndexes}
  * @property {Function} query - {@link vcf.query}
- * @property {Function} queryInBatch - {@link vcf.queryInBatch}
+ * @property {Function} batchQuery - {@link vcf.batchQuery}
  * @property {Function} sortIdxx - {@link vcf.sortIdxx}
  * @property {Function} getArrayBuffer - {@link vcf.getArrayBuffer}
  * @property {Function} fetchGz - {@link vcf.fetchGz}
@@ -83,7 +83,7 @@ if(!vcf.pako){
  * @attribute {array} idxx Array of objects concerning the chunk contents, each of these containing the following attributes: chrStart - start chromosome, chrEnd - end chromosome, dt - list of the vcf table containing the SNPs information in the range of chromosome and positions, posStart - Start position in the start chromosome, posEnd - End position in the end chromosome, ii - Byte slice indexes.
  * @attribute {Function} indexGz Same as vcf.indexGz
  * @attribute {Function} query Same as vcf.query
- * @attribute {Function} queryInBatch Same as vcf.queryInBatch
+ * @attribute {Function} batchQuery Same as vcf.batchQuery
  * @attribute {Function} getArrayBuffer Same as vcf.getArrayBuffer
  * @attribute {Function} fetchGz Same as vcf.fetchGz
  * @attribute {Function} fetchRange Same as vcf.fetchRange
@@ -120,8 +120,8 @@ class VcfObject {
     async query(q='1,10485'){
 		return await vcf.query(q, this)
 	}
-    async queryInBatch(query){
-		return await vcf.queryInBatch(query, this)
+    async batchQuery(query){
+		return await vcf.batchQuery(query, this)
 	}
     async getArrayBuffer(range=[0,1000],url=this.url){
     	return vcf.getArrayBuffer(range,url)
@@ -239,8 +239,8 @@ async function Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/Al
     that.query=async function(q='1,10485'){
 		return await vcf.query(q, that)
 	}
-    that.queryInBatch=async function(query){
-		return await vcf.queryInBatch(query, that)
+    that.batchQuery=async function(query){
+		return await vcf.batchQuery(query, that)
 	}
     that.getArrayBuffer=async(range=[0,1000],url=that.url)=>{
     	return vcf.getArrayBuffer(range,url)
@@ -531,9 +531,9 @@ vcf.query= async function(q='1,10485',that){
 * let v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz')
 * var dat = await fetch(location.href.split('#')[0]+'multiple_query.json')
 * dat = await dat.json()
-* var result = await vcf.queryInBatch(dat['list'], v)
+* var result = await vcf.batchQuery(dat['list'], v)
 */
-vcf.queryInBatch= async function(query,that){
+vcf.batchQuery= async function(query,that){
 	var compiled={ 'hit': [], 'range': { 'dt': [] }, 'executionTime': {} }
     
     var filtered = query.filter( p =>{ p.length==2 } )

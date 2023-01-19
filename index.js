@@ -57,6 +57,8 @@ var v = null
                                   xaxis: {title: 'Retrieval Range Sizes - log10 scale'},
                                   yaxis: {title: 'Time (ms) - log10 scale'}
                                 };
+                        var obj = { "data": data, "layout": layout }
+                        console.log(obj)
 
                                 Plotly.newPlot('plotRetrieval', data, layout);
                             }
@@ -80,8 +82,8 @@ var v = null
                         var all = { 'withoutPosOk': {}, 'withoutPosNotOk':{}, 'withPosOk': {}, 'withPosNotOk':{} }
                         
                         console.log('part 3')
-                        v = await Vcf(url)
-                        var resultwithPosOk = await v.queryInBatch( query ) 
+                        var v2 = await Vcf(url)
+                        var resultwithPosOk = await v2.batchQuery( query ) 
                         console.log(resultwithPosOk)
                         var yinfowithPosOk=[]
                         var keys = Object.keys(resultwithPosOk['executionTime'])
@@ -98,8 +100,8 @@ var v = null
                         })
                         
                         console.log('part 4')
-                        v = await Vcf(url)
-                        var resultwithPosNotOk = await v.queryInBatch( dummy_query ) 
+                        v2 = await Vcf(url)
+                        var resultwithPosNotOk = await v2.batchQuery( dummy_query ) 
                         console.log(resultwithPosNotOk)
                         var yinfowithPosNotOk=[]
                         var keys = Object.keys(resultwithPosNotOk['executionTime'])
@@ -151,6 +153,8 @@ var v = null
                           xaxis: {title: 'Queries'},
                           yaxis: {title: 'Time (ms) - log10 scale'}
                         };
+                        var obj = { "data": data, "layout": layout }
+                        console.log(obj)
 
                         Plotly.newPlot('plotPerfomanceAux1', data, layout);
                     }
@@ -238,8 +242,157 @@ var v = null
                           xaxis: {title: 'Queries'},
                           yaxis: {title: 'Time (ms) - log10 scale'}
                         };
+                        var obj = { "data": data, "layout": layout }
+                        console.log(obj)
 
                         Plotly.newPlot('plotPerfomanceAux2', data, layout);
+                    }
+                    
+                    makePerformancePlotAll = async ( ) => {
+                        let url=vcfURL.value;   
+                        
+                        var scope = 'demo1'
+                        var dat = await fetch(location.href.split('#')[0]+scope+'_multiple_query.json')
+                        dat = await dat.json()
+                        
+                        var query = dat['list']
+                        var dummy_query = []
+                        query.forEach( x => {
+                            var pos = parseInt(x[1])*10
+                            dummy_query.push([x[0], String(pos)])
+                        })
+                        
+                        var all = { 'withoutPosOk': {}, 'withoutPosNotOk':{}, 'withPosOk': {}, 'withPosNotOk':{} }
+                        
+                        console.log('part 1')
+                        var yinfowithoutPosOk = await Promise.all( query.map( async i => {
+                            var v = await Vcf(url)
+                            //Vcf(url).then(  async(value) => {
+                            //v = value
+                                var st = performance.now()
+                                let res =  await v.query(i[0]+','+i[1])
+                                var end = performance.now()
+                                var diff = Number( Math.log10(end-st).toFixed(2) )
+                                console.log(diff)
+                                all['withoutPosOk'][i[0]+','+i[1]]=diff
+                                
+                                return diff
+                            //})
+                        }))
+                        
+                        console.log('part 2')
+                        var yinfowithoutPosNotOk = await Promise.all( dummy_query.map( async i => {
+                            var v = await Vcf(url)
+                            //Vcf(url).then(  async(value) => {
+                            //v = value
+                                var st = performance.now()
+                                let res =  await v.query(i[0]+','+i[1])
+                                var end = performance.now()
+                                var diff = Number( Math.log10(end-st).toFixed(2) )
+                                console.log(diff)
+                                all['withoutPosOk'][i[0]+','+i[1]]=diff
+                                
+                                return diff
+                            //})
+                        }))
+                        
+                        console.log('part 3')
+                        var v2 = await Vcf(url)
+                        var resultwithPosOk = await v2.batchQuery( query ) 
+                        console.log(resultwithPosOk)
+                        var yinfowithPosOk=[]
+                        var keys = Object.keys(resultwithPosOk['executionTime'])
+                        keys.forEach( x => {
+                            if(x!='total'){
+                                var qpos = resultwithPosOk['executionTime'][x]['queryLength']
+                                var time = resultwithPosOk['executionTime'][x]['time']/qpos
+                                for (var i =0; i<qpos; i++){
+                                    var diff = Number( Math.log10(time).toFixed(2))
+                                    yinfowithPosOk.push( diff )
+                                    all['withPosOk'][x+'-'+i]=diff
+                                }
+                            }
+                        })
+                        
+                        console.log('part 4')
+                        v2 = await Vcf(url)
+                        var resultwithPosNotOk = await v2.batchQuery( dummy_query ) 
+                        console.log(resultwithPosNotOk)
+                        var yinfowithPosNotOk=[]
+                        var keys = Object.keys(resultwithPosNotOk['executionTime'])
+                        keys.forEach( x => {
+                            if(x!='total'){
+                                var qpos = resultwithPosNotOk['executionTime'][x]['queryLength']
+                                var time = resultwithPosNotOk['executionTime'][x]['time']/qpos
+                                for (var i =0; i<qpos; i++){
+                                    var diff = Number( Math.log10(time).toFixed(2))
+                                    yinfowithPosNotOk.push( diff )
+                                    all['withPosNotOk'][x+'-'+i]=diff
+                                }
+                            }
+                        })
+                        console.log(all)
+                        
+                        var x =[]
+                        for (var i =0; i<query.length; i++){
+                            x.push(i+1)
+                        }
+                        console.log('trace 1', yinfowithoutPosOk)
+                        var trace1 = {
+                          x: x,
+                          y: yinfowithoutPosOk,
+                          text: yinfowithoutPosOk, 
+                          name: 'Without Caching on Existing positions',
+                          mode: 'lines+markers',
+                          textposition: 'top',
+                          type: 'scatter'
+                        };
+
+                        console.log('trace 2', yinfowithoutPosNotOk)
+                        var trace2 = {
+                          x: x,
+                          y: yinfowithoutPosNotOk,
+                          text: yinfowithoutPosNotOk, 
+                          name: 'Without Caching on Non Existing positions',
+                          mode: 'lines+markers',
+                          textposition: 'top',
+                          type: 'scatter'
+                        };
+                        
+                        console.log('trace 3', yinfowithPosOk)
+                        var trace3 = {
+                          x: x,
+                          y: yinfowithPosOk,
+                          text: yinfowithPosOk, 
+                          name: 'With Caching on Existing positions',
+                          mode: 'lines+markers',
+                          textposition: 'top',
+                          type: 'scatter'
+                        };
+
+                        console.log('trace 4', yinfowithPosNotOk)
+                        var trace4 = {
+                          x: x,
+                          y: yinfowithPosNotOk,
+                          text: yinfowithPosNotOk, 
+                          name: 'With Caching on Non Existing positions',
+                          mode: 'lines+markers',
+                          textposition: 'top',
+                          type: 'scatter'
+                        };
+
+                        var data = [trace1, trace2, trace3, trace4];
+
+                        var layout = {
+                          legend: { x: 1.05 },
+                          title: 'Performance comparison Individual queries on Existing x Non-existing Positions',
+                          xaxis: {title: 'Queries'},
+                          yaxis: {title: 'Time (ms) - log10 scale'}
+                        };
+                        var obj = { "data": data, "layout": layout }
+                        console.log(obj)
+
+                        Plotly.newPlot('plotPerfomance', data, layout);
                     }
                     
                     readRangeFun=async _=>{
@@ -493,7 +646,7 @@ var v = null
                             
                             var dat = await fetch(location.href.split('#')[0]+scope+'_multiple_query.json')
                             dat = await dat.json()
-                            var result = await v.queryInBatch( dat['list'] ) 
+                            var result = await v.batchQuery( dat['list'] ) 
                             makeHeader(v.cols)
                             handleHits(result, 0)
                             all_results = result
