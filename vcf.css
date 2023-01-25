@@ -39,6 +39,10 @@ table {
     white-space: nowrap;
 }
 
+textarea {
+    font-size:x-small;
+}
+
 a:hover {
     background-color:yellow;
     color:red
