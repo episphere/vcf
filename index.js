@@ -403,7 +403,7 @@ var v = null
                         infoFile.style.display="none"
                         
                         if(rangeTextArea.style.height.length==0){
-                            rangeTextArea.style.height='10em'
+                            rangeTextArea.style.height='30em'
                             rangeTextArea.style.width='100%'
                         }
                         
@@ -471,7 +471,9 @@ var v = null
                         var hits=[]
                         if(result.hit.length==0){
                             if(result.range==undefined || result.range.dt==undefined){
-                                alert('The chromosome used in the search was not found in the VCF file')
+                                console.log('No exact matches for this chromosome-position in this VCF file')
+                                infoTable.innerHTML= 'No exact matches for this chromosome-position in this VCF file'                
+                                //alert('The chromosome used in the search was not found in the VCF file')
                             }
                             else{
                                 if(result.range.dt.length>0){
@@ -479,10 +481,11 @@ var v = null
                                     infoTable.innerHTML='There were no exact matches for the position, but these are the closest SNPs from the queried position'
                                 }
                             }
+                            infoTable.innerHTML= '&nbsp;&nbsp;&nbsp;No exact matches for this chromosome-position in this VCF file'                
                         }
                         else{
                             hits=result.hit
-                            infoTable.innerHTML='These are the results found for the queried position and chromosome'
+                            infoTable.innerHTML='&nbsp;&nbsp;&nbsp;&nbsp;Variants found at that chromossome-position'
                         }
                         
                         if(hits.length>0){
@@ -514,7 +517,7 @@ var v = null
                     
                     filterFun = async _=> {
                         
-                        filter.innerHTML="Filtering ..."
+                        filter.innerHTML="searching ..."
                         filter.disabled=true
                                 
                         var chromosome = chrom.value
@@ -544,7 +547,7 @@ var v = null
                                 runtime.innerHTML=  `${diff} seconds`
                                 infoTime.style.display="block"
                                 
-                                filter.innerHTML="Filter"
+                                filter.innerHTML="Find"
                                 filter.disabled=false
                                 
                             })
@@ -631,7 +634,7 @@ var v = null
                         exporting.disabled=true
                         */
                         
-                        filterb.innerHTML="Filtering ..."
+                        filterb.innerHTML="searching ..."
                         filterb.disabled=true
                             
                         filteredSnps.style.display='none'

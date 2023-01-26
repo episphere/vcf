@@ -119,7 +119,7 @@
                             
                             <div class="row mt-3">
                                 <div class="col-12">
-                                    <h3> 2 - Filtering chromosomes and positions <span style="font-size:small; color:green; display: none;" id='infoTime'>(Query execution time: <span id="runtime" style="color:red">...</span>)</span> </h3>
+                                    <h3> 2 - Finding chromosomes and positions <span style="font-size:small; color:green; display: none;" id='infoTime'>(Query execution time: <span id="runtime" style="color:red">...</span>)</span> </h3>
                                     <p> 
                                         Choose a specific chromosome and position to search across the vcf file. Our search algorithm uses an strategy to optimize the search, returning the respective results in miliseconds. 
                                         <br />
@@ -142,6 +142,28 @@
                                         </div>    
                                     </form>
                                     
+                                </div>
+                            </div>
+
+                                <div class="row mt-3">
+                                        <h4 id="infoTable"></h4>
+                                <div class="col-12"  id="filteredSnps">
+                                    
+                                    <table class="table table-striped" > 
+                                        <thead id="tableHeader">
+                                        
+                                        </thead>
+                                        
+                                        <tbody id="tableBody" >
+                                        
+                                        </tbody>
+                                    </table>
+                                    
+                                    <nav aria-label="pagination">
+                                        <ul class="pagination" id="pagesContainer">
+                                        
+                                        </ul>
+                                    </nav>
                                 </div>
                             </div>
                             
@@ -178,27 +200,6 @@
                                 </div>
                             </div>
                             
-                            <div class="row mt-3">
-                                <div class="col-12"  id="filteredSnps">
-                                    <h4 id="infoTable"></h4>
-                                    
-                                    <table class="table table-striped" > 
-                                        <thead id="tableHeader">
-                                        
-                                        </thead>
-                                        
-                                        <tbody id="tableBody" >
-                                        
-                                        </tbody>
-                                    </table>
-                                    
-                                    <nav aria-label="pagination">
-                                        <ul class="pagination" id="pagesContainer">
-                                        
-                                        </ul>
-                                    </nav>
-                                </div>
-                            </div>
                             
                         </section>
                     </div>
