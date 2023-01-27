@@ -1,6 +1,7 @@
 var v = null
                     var itemsPage = 20
                     var all_results = {}
+                    var all_range = {}
                     
                     makeRetrievalPlot = () => {
                         plotRetrieval.innerHTML=''
@@ -450,6 +451,7 @@ var v = null
                         cols.forEach( x => { columns += `<th scope="col"> ${x} </th>` } )
                         columns = `<tr> ${columns} </tr>`
                         tableHeader.innerHTML=columns
+                        RtableHeader.innerHTML=columns
                     }
                     
                     makePages = (numPages) => {
@@ -462,8 +464,59 @@ var v = null
                         pagesContainer.innerHTML=pagesContent
                     }
                     
+                    makePagesRange = (numPages) => {
+                        RpagesContainer.innerHTML=''
+                        
+                        var pagesContent=''
+                        for(var i=1; i<=numPages; i++){
+                            pagesContent+=`<li class="page-item " id="rpit${i}" ><a class="page-link" href="javascript:void(0)" onClick="passPageRange(${i}); event.preventDefault();" > ${i} </a></li>`
+                        }
+                        RpagesContainer.innerHTML=pagesContent
+                    }
+                    
                     passPage = (page) => {
                         handleHits(all_results, page-1)
+                    }
+                    
+                    passPageRange = (page) => {
+                        handleHitsRange(all_range, page-1)
+                    }
+                    
+                    handleHitsRange = (result, start) => {
+                        if(result.length>0 && result.dt==undefined ){
+                            result.dt=result
+                        }
+                        
+                        if(result!=undefined && result.dt!=undefined){
+                            var hits = result.dt;
+                            
+                            if(hits.length>0){
+                                if(hits.length > itemsPage){
+                                    var numPages = Math.ceil(hits.length/itemsPage)
+                                    makePagesRange(numPages)
+                                    document.getElementById('rpit'+(start+1)).className='page-item active'
+                                }  
+                                else{
+                                    RpagesContainer.innerHTML=''
+                                }
+                                start=start*itemsPage
+                                hits = hits.slice(start, start+itemsPage)
+                                
+                                var table_info=''
+                                hits.forEach( x => {
+                                    var temp=''
+                                    x.forEach( y => {
+                                        temp+=`<td>${y}</td>`
+                                    })
+                                    table_info+=`<tr>${temp}</tr>`
+                                })
+                                
+                                RfilteredSnps.style.display='block'
+                                RtableBody.innerHTML=table_info 
+                                
+                            }
+                        }
+                    
                     }
                     
                     handleHits = (result, start) => {
@@ -481,11 +534,14 @@ var v = null
                                     infoTable.innerHTML='There were no exact matches for the position, but these are the closest SNPs from the queried position'
                                 }
                             }
-                            infoTable.innerHTML= '&nbsp;&nbsp;&nbsp;No exact matches for this chromosome-position in this VCF file'                
+                            infoTable.innerHTML= '&nbsp;&nbsp;&nbsp;No exact matches for this chromosome-position in this VCF file'    
+                            
+                            rangeInfo.style.display='none'            
                         }
                         else{
                             hits=result.hit
-                            infoTable.innerHTML='&nbsp;&nbsp;&nbsp;&nbsp;Variants found at that chromossome-position'
+                            infoTable.innerHTML='&nbsp;&nbsp;&nbsp;&nbsp;Variants found at that chromosome-position'
+                            rangeInfo.style.display=''    
                         }
                         
                         if(hits.length>0){
@@ -509,7 +565,7 @@ var v = null
                                 table_info+=`<tr>${temp}</tr>`
                             })
                             
-                            filteredSnps.style.display='block'
+                            hitInfo.style.display='block'
                             tableBody.innerHTML=table_info 
                             
                         }
@@ -524,7 +580,8 @@ var v = null
                         var pos = position.value
                         
                         if(chromosome!='0' && chromosome!='' && pos!='0' && pos!=''){
-                            filteredSnps.style.display='none'
+                            hitInfo.style.display='none'
+                            rangeInfo.style.display='none'
                             
                             let url=vcfURL.value;  
                             Vcf(url).then( async (value) => {
@@ -541,6 +598,8 @@ var v = null
                                 console.log(result)
                                 handleHits(result, 0)
                                 all_results = result
+                                handleHitsRange(result.range, 0)
+                                all_range = result.range
                                 
                                 var end = performance.now()
                                 var diff=((end-start)/1000).toFixed(2)
@@ -637,7 +696,8 @@ var v = null
                         filterb.innerHTML="searching ..."
                         filterb.disabled=true
                             
-                        filteredSnps.style.display='none'
+                        hitInfo.style.display='none'
+                        rangeInfo.style.display='none'
                         
                         let url=vcfURL.value;   
                         
@@ -653,6 +713,8 @@ var v = null
                             makeHeader(v.cols)
                             handleHits(result, 0)
                             all_results = result
+                            handleHitsRange(result.range, 0)
+                            all_range = result.range
                             makePerformancePlot(all_results['executionTime'])
                             
                             var end = performance.now()
