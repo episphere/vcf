@@ -1,0 +1,50 @@
+<head>
+    <link href="https://episphere.github.io/gps/obs2.css" rel="stylesheet">
+    <script src="vcf.js"></script>
+</head>
+<body>
+<h1>
+    VCF 
+    <sup style="font-size:medium;color:green"><a href="https://dceg.cancer.gov/" target="_blank" style="color:green">DCEG</a></sup> <br>
+    <span style="font-size:small;color:blue">
+        [<a href="https://github.com/episphere/vcf" target="_blank">code</a>] 
+        [<a href="https://github.com/episphere/vcf/issues" target="_blank">issues</a>] 
+        [<a href="https://observablehq.com/@episphere/vcf" target="_blank" style="font-size:large;font-weight:bold;color:blue">Notebook</a>] 
+        [<a href="https://www.youtube.com/watch?v=pvtzGEx51R0" target="_blank" style="font-size:large;font-weight:bold;color:red">YouTube</a>]
+        [<a href="https://gitter.im/episphere/vcf" target="_blank">gitter</a>]
+        <!--    
+        [
+            <select id="selectDemo" onChange="document.location.hash=this.value; handleUrlParams();">
+                <option value="url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz&range=0,10000&query=7,151040280&scope=demo1" selected>Demonstration DBSnp</option>
+                <option value="url=http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr3.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz&range=20000,60000&query=3,60069&scope=demo2" >Demonstration 1000 Genomes</option>
+                <option value="url=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz&range=30000,80000&query=1,861366&scope=demo3">Demonstration ClinVar</option>
+            </select>
+        ]
+        -->
+    </span>
+</h1>
+    
+<p>This simple web application will illustrate how the VCF library can 1) connect, retrieve, and search for content using HTTP range requests</p>
+
+
+
+<h2>1. Connect to remote [...].vcf.gz file</h2>
+
+<input value="https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz" size=60><button>Connect</button>
+<p>[provide a URL or pick a demo:
+    <select id="selectDemo">
+        <option value="url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz&range=0,10000&query=7,151040280&scope=demo1" selected>Demonstration DBSnp</option>
+        <option value="url=http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr3.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz&range=20000,60000&query=3,60069&scope=demo2" >Demonstration 1000 Genomes</option>
+        <option value="url=https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz&range=30000,80000&query=1,861366&scope=demo3">Demonstration ClinVar</option>
+    </select>
+]
+</p>
+
+
+
+
+<script>
+    selectDemo.onchange=function(op){
+        debugger
+    }
+</script>
