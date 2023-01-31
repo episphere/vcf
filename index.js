@@ -530,12 +530,13 @@ var v = null
                             }
                             else{
                                 hits=result.range
-                                infoTable.innerHTML='There were no exact matches for the position, but these are the closest SNPs from the queried position'
-                                        
+                                infoTable.innerHTML='There were no exact matches for the position, this is the closest chached range to the queried position'
+                                //console.log('There were no exact matches for the position, see range for the closest chached positions')
                                 if(result.range.dt!=undefined){ 
                                     if(result.range.dt.length>0){
                                         hits=result.range.dt
-                                        infoTable.innerHTML='There were no exact matches for the position, but these are the closest SNPs from the queried position'
+                                        console.log('There were no exact matches for the position, and no search convergence, see range for the last cached positions')
+                                        infoTable.innerHTML='There were no exact matches for the position, and no search convergence, these are the closest cached SNPs to the queried position'
                                     }
                                 }
                             }
