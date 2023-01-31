@@ -523,18 +523,23 @@ var v = null
                     
                         var hits=[]
                         if(result.hit.length==0){
-                            if(result.range==undefined || result.range.dt==undefined){
+                            if(result.range==undefined && result.range.dt==undefined){
                                 console.log('No exact matches for this chromosome-position in this VCF file')
-                                infoTable.innerHTML= 'No exact matches for this chromosome-position in this VCF file'                
+                                infoTable.innerHTML= 'No exact matches for this chromosome-position in this VCF file, and no range conversion”'                
                                 //alert('The chromosome used in the search was not found in the VCF file')
                             }
                             else{
-                                if(result.range.dt.length>0){
-                                    hits=result.range.dt
-                                    infoTable.innerHTML='There were no exact matches for the position, but these are the closest SNPs from the queried position'
+                                hits=result.range
+                                infoTable.innerHTML='There were no exact matches for the position, but these are the closest SNPs from the queried position'
+                                        
+                                if(result.range.dt!=undefined){ 
+                                    if(result.range.dt.length>0){
+                                        hits=result.range.dt
+                                        infoTable.innerHTML='There were no exact matches for the position, but these are the closest SNPs from the queried position'
+                                    }
                                 }
                             }
-                            infoTable.innerHTML= '&nbsp;&nbsp;&nbsp;No exact matches for this chromosome-position in this VCF file'    
+                            //infoTable.innerHTML= '&nbsp;&nbsp;&nbsp;No exact matches for this chromosome-position in this VCF file'    
                             
                             rangeInfo.style.display='none'            
                         }
