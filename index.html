@@ -46,6 +46,14 @@
                     </h1> 
                     
                     <hr>
+                    <div style="background-color:rgb(237, 237, 230);color:maroon;font-size:large">In addition to documenting the open source code, this web page includes a live demonstration using the remote VCF operation library to retrieve and analyse sequence data.
+                        For a quick start using the VCF library follow the intructions in the Methods section of the manuscript. For an even quicker example, with the browser pointed at any domain, using the <a href="https://developer.chrome.com/docs/devtools/console/#javascript" target="_blank">browser console</a>, also reviewed in the <a href="https://www.youtube.com/watch?v=pvtzGEx51R0" target="_blank">YouTube webcast video</a> above: 
+                        <li><code>Vcf = (await import('http://episphere.github.io/vcf/export.js')).Vcf</code></li>
+                        <li><code>v = await Vcf('https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz')</code></li>
+                        <li><code>q = await v.query('7:151040280')</code></li>
+                        This example uses ES6 module mechanism to import the library. For the conventional script tag loading or the CommonJS require see the <a href="https://observablehq.com/@episphere/vcf" target="_blank">observablehq.com/@episphere/vcf</a> Notebook above.
+                    </div>
+                    <hr>
                 </section>
             
                 <ul class="nav nav-tabs" id="options" role="tablist">
