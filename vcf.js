@@ -452,6 +452,7 @@ vcf.query= async function(q='1,10485',that){
 	*/
 	
     let aux=-1
+    let aux_chrom = -1
     // 1000 genomes have unordered chromosomes
     for(i=0;i<that.idxx.length;i++){
         let chrEnd = that.chrCode.indexOf(that.idxx[i].chrEnd)
@@ -462,6 +463,9 @@ vcf.query= async function(q='1,10485',that){
         if(chrEnd==q[0]&posEnd>=q[1]){
 	        aux=i
 	        break
+        }
+        if(chrEnd==q[0]){
+            aux_chrom=i
         }
     }
     
@@ -476,7 +480,11 @@ vcf.query= async function(q='1,10485',that){
             } 
         }
         i = (i==that.idxx.length) ? i-1 : i
+        if(i>aux_chrom && aux_chrom!=-1){
+            i=aux_chrom
+        }
         aux=i
+        
     }
     i=aux
     
