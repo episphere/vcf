@@ -31,6 +31,12 @@ calculate_probabilities_snp = (snp_info) => {
         })
         total *= 2 // Total number of chromosomes in the population
         
+        for ( var k of ['0|0', 'mix', '1|1']){
+            if( ! Object.keys(cnts).includes(k) ){
+                cnts[k]=0
+            }
+        }
+        
         for(var k of Object.keys(cnts)){
             probs['count_'+k] = cnts[k]
         }
@@ -62,30 +68,65 @@ calculate_ld = (snp1, snp2) => {
                 }
                 var f = snp_2[j]
                 if(f!=undefined){
-                    var aux = ''
-                    if(e=='0|0' || e=='mix'){
-                        aux+='0'
-                    } 
-                    if(e=='1|1' || e=='mix'){
-                        aux+='1'
+                    if( f.split('|')[0] != f.split('|')[1] ){
+                        f='mix'
                     }
                     
-                    if(f=='0|0' || f=='mix'){
-                        aux+='0'
+                    var aux = []
+                    
+                    if(e=='0|0'){
+                        if(f=='mix'){
+                            aux.push('00')
+                            aux.push('01')
+                        }
+                        if(f=='0|0'){
+                            aux.push('00')
+                        }
+                        if(f=='1|1'){
+                            aux.push('01')
+                        }
                     } 
-                    if(f=='1|1' || f=='mix'){
-                        aux+='1'
+                    if(e=='1|1' ){
+                        if(f=='mix'){
+                            aux.push('10')
+                            aux.push('11')
+                        }
+                        if(f=='0|0'){
+                            aux.push('10')
+                        }
+                        if(f=='1|1'){
+                            aux.push('11')
+                        }
+                    } 
+                    if(e=='mix' ){
+                        if(f=='mix'){
+                            aux.push('00')
+                            aux.push('01')
+                            aux.push('10')
+                            aux.push('11')
+                        }
+                        if(f=='0|0'){
+                            aux.push('00')
+                            aux.push('10')
+                        }
+                        if(f=='1|1'){
+                            aux.push('01')
+                            aux.push('11')
+                        }
                     }
                     
-                    if( ! Object.keys(cnts).includes(aux) ){
-                        cnts[aux]=0
+                    for (var x of aux){
+                        if( ! Object.keys(cnts).includes(x) ){
+                            cnts[x]=0
+                        }
+                        cnts[x]+=1 
                     }
-                    cnts[aux]+=1 
                 }
             } 
             
             j+=1  
         })
+        j*=2
         
         var probs1 = calculate_probabilities_snp(snp1)
         var probs2 = calculate_probabilities_snp(snp2)
@@ -110,6 +151,7 @@ calculate_ld = (snp1, snp2) => {
                 p2=probs2['q']
             }
             var expected = p1*p2*j
+            console.log(k, expected)
             result['chisq'] += Math.pow( (cnts[k]-expected), 2)/expected
         }
         result['pvalue'] = jStat.chisquare.pdf( result['chisq'], 1 )
