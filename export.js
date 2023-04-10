@@ -450,7 +450,7 @@ vcf.query= async function(q='1,10485',that){
 		}
 	}
 	*/
-	
+	let i=0
     let aux=-1
     let aux_chrom = -1
     // 1000 genomes have unordered chromosomes
