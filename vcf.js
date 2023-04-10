@@ -492,7 +492,7 @@ vcf.query= async function(q='1,10485',that){
     
 	console.log(`Seed ${i}: `)
 	
-	previousRange='0:0-0:0'
+	var previousRange='0:0-0:0'
 	
 	var searchedRanges = []
 	//console.log(`Query seed: ${i}`)
@@ -658,7 +658,7 @@ vcf.batchQuery= async function(query,that){
 	        
 	        console.log(`Seed ${i}: `)
 	        
-	        previousRange='0:0-0:0'
+	        var previousRange='0:0-0:0'
 	        
 	        var searchedRanges = []
 	        //console.log(`Query seed: ${i}`)
