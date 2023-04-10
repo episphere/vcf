@@ -511,7 +511,7 @@ vcf.query= async function(q='1,10485',that){
 		let posEnd = lastrow_filteredDt_posEnd // last position for this chromossome
 		console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
 		
-		newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
+		var newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
 		//console.log(newRange == previousRange)
 		if(newRange != previousRange){
 		    previousRange = newRange
@@ -677,7 +677,7 @@ vcf.batchQuery= async function(query,that){
 		        let posEnd = lastrow_filteredDt_posEnd // last position for this chromossome
 		        console.log(`(${i}) ${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`)
 		        
-		        newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
+		        var newRange=`${that.chrCode[chrStart]}:${posStart}-${that.chrCode[chrEnd]}:${posEnd}`
 		        //console.log(newRange == previousRange)
 		        if(newRange != previousRange){
 		            previousRange = newRange
