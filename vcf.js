@@ -24,6 +24,7 @@ console.log('vcf.js loaded')
  * @property {Function} saveQueryResult - {@link vcf.saveQueryResult}
  * @property {Function} loadScript - {@link vcf.loadScript}
  */
+ 
 vcf={}
 vcf.gzKey=[31,139,8,4,0,0,0,0,0,255,6,0,66,67,2,0]
 vcf.keyGap=20000-1
@@ -1036,6 +1037,7 @@ vcf.loadScript= async function(url){
         await load
     }
     // satisfy dependencies
+    
     await asyncScript(url)
 } 
 

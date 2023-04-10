@@ -24,7 +24,7 @@ console.log('vcf.js loaded')
  * @property {Function} saveQueryResult - {@link vcf.saveQueryResult}
  * @property {Function} loadScript - {@link vcf.loadScript}
  */
-vcf={}
+var vcf={}
 vcf.gzKey=[31,139,8,4,0,0,0,0,0,255,6,0,66,67,2,0]
 vcf.keyGap=20000-1
 vcf.chrCode='1-22,X,Y,XY,MT,0'
@@ -202,7 +202,7 @@ class VcfObject {
 * let v = await Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', 19999)
 * let v = await Vcf(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', 19999, '1-5')
 */
-Vcf = async function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', keyGap=vcf.keyGap, chrCode=vcf.chrCode){
+var Vcf = async function (url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/All_20180418.vcf.gz', keyGap=vcf.keyGap, chrCode=vcf.chrCode){
     //alternative url https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz'){
     
     /* Initializes object with the direct attributes*/
@@ -1068,4 +1068,4 @@ if(typeof(pako)=="undefined"){
 //	define(vcf)
 //}
 
-export {Vcf}
+export {vcf, Vcf}
