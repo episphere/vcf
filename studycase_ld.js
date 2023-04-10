@@ -170,9 +170,12 @@ calculate_ld = (snp1, snp2) => {
 }
 
 perform_ld = () => {
+    var chrom = ld_chrom.value
+    var start = ld_start.value
+    var end = ld_end.value
+    
     var ld_result={}
 
-    var chrom = ld_chrom.value
     var url=`http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr${chrom}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz`
     if(chrom=='MT'){
         url='http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chrMT.phase3_callmom-v0_4.20130502.genotypes.vcf.gz'
@@ -184,8 +187,6 @@ perform_ld = () => {
         url='http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chrX.phase3_shapeit2_mvncall_integrated_v1c.20130502.genotypes.vcf.gz'
     }
     
-    var start = ld_start.value
-    var end = ld_end.value
     if(start < end){
         action_ld.disabled=true
         action_ld.innerHTML='Analyzing ...'
