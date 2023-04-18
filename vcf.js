@@ -532,7 +532,8 @@ vcf.query= async function(q='1,10485',that){
 				    if((posStart<=q[1])&(posEnd>=q[1])){ // range found
 					    val.range=that.idxx[i].dt.filter( x => x.length==that.cols.length )
 					    val.hit=that.idxx[i].dt.filter(r=>r[0]==that.chrCode[q[0]]&r[1]==q[1])
-					    break
+						val.ii=that.idxx[i].ii //key breakpoints bounding the hit
+						break
 				    }else if(posStart<q[1]){ // almost there
 					    //i = i>0? i-1 : 0
 					    await that.fetchGz(Math.round((that.ii00[i]+that.ii00[i+1])/2))
