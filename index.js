@@ -749,6 +749,11 @@ var v = null
                     }
                     
                     handleUrlParams = () => {
+                        if(document.getElementById('selectDemo').value.match('1000genomes')){
+                            document.getElementById('showHideLD1000').hidden=false                
+                        }else{
+                            document.getElementById('showHideLD1000').hidden=true            
+                        }
                         var params = document.location.hash.indexOf('=')==-1 ? 'url=https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00-All.vcf.gz&range=0,10000&query=7,151040280&scope=demo1' : document.location.hash ;
                         var paramsl = params.replace('#','').split('&')
                         var par = {}
