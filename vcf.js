@@ -957,7 +957,6 @@ vcf.fileSize=async(url='https://ftp.ncbi.nih.gov/snp/organisms/human_9606/VCF/00
     let response = await fetch(url,{
         method:'HEAD'
     });
-    const reader = response.body.getReader();
     const contentLength = response.headers.get('Content-Length');
     return parseInt(contentLength)
 }
